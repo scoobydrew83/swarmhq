@@ -6,13 +6,15 @@ import { ThemeToggle } from "../../components/theme-toggle";
 
 type SessionPayload = {
   token: string;
-  configPath: string;
-  envPath: string;
   appName: string;
 };
 
 type DefaultsPayload = {
-  defaults: ConfigBuilderDefaults;
+  defaults: Omit<ConfigBuilderDefaults, "input"> & {
+    hasVrrpPassword: boolean;
+    hasTailscaleAuthKey: boolean;
+    input: Omit<ConfigBuilderDefaults["input"], "vrrpPassword" | "tailscaleAuthKey">;
+  };
 };
 
 type SavePayload = {
@@ -34,6 +36,8 @@ const STEPS = ["Files", "Core", "Keepalived", "Nodes", "Secrets", "Save"] as con
 export default function SetupPage() {
   const [session, setSession] = useState<SessionPayload | null>(null);
   const [input, setInput] = useState<ConfigBuilderInput | null>(null);
+  const [hasVrrpPassword, setHasVrrpPassword] = useState(false);
+  const [hasTailscaleAuthKey, setHasTailscaleAuthKey] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveResult, setSaveResult] = useState<ConfigBuilderSaveResult | null>(null);
@@ -56,7 +60,9 @@ export default function SetupPage() {
         const defaults = (await defaultsResponse.json()) as DefaultsPayload;
         if (cancelled) return;
         setSession(nextSession);
-        setInput(defaults.defaults.input);
+        setInput({ ...defaults.defaults.input, vrrpPassword: "", tailscaleAuthKey: "" });
+        setHasVrrpPassword(defaults.defaults.hasVrrpPassword);
+        setHasTailscaleAuthKey(defaults.defaults.hasTailscaleAuthKey);
       } catch (error) {
         if (!cancelled) setLoadError(error instanceof Error ? error.message : String(error));
       }
@@ -343,6 +349,7 @@ export default function SetupPage() {
                       className="field-input"
                       type={showVrrp ? "text" : "password"}
                       value={input.vrrpPassword ?? ""}
+                      placeholder={hasVrrpPassword ? "Already configured — leave blank to keep" : ""}
                       onChange={(e) => setInput({ ...input, vrrpPassword: e.target.value })}
                     />
                     <button type="button" className="reveal-btn" onClick={() => setShowVrrp((v) => !v)}>
@@ -359,6 +366,7 @@ export default function SetupPage() {
                       className="field-input"
                       type={showTailscale ? "text" : "password"}
                       value={input.tailscaleAuthKey ?? ""}
+                      placeholder={hasTailscaleAuthKey ? "Already configured — leave blank to keep" : ""}
                       onChange={(e) => setInput({ ...input, tailscaleAuthKey: e.target.value })}
                     />
                     <button type="button" className="reveal-btn" onClick={() => setShowTailscale((v) => !v)}>

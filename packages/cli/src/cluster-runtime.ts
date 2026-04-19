@@ -11,6 +11,14 @@ import {
 
 const execFileAsync = promisify(execFile);
 
+const SAFE_HOSTNAME_RE = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,252}$/;
+
+function validateRemoteHostname(hostname: string): void {
+  if (!SAFE_HOSTNAME_RE.test(hostname)) {
+    throw new Error(`Unexpected hostname format from remote: ${JSON.stringify(hostname)}`);
+  }
+}
+
 type NodeConnectivity = {
   node: SwarmNode;
   reachable: boolean;
@@ -279,6 +287,7 @@ async function resolveLeader(context: RuntimeContext): Promise<LeaderDetails> {
     }
 
     const [leaderHostname] = leaderLine.split("\t");
+    validateRemoteHostname(leaderHostname);
     const leaderIp =
       (await tryExecSsh(
         context,
@@ -862,6 +871,9 @@ export async function listClusterTasks(options: {
   asJson?: boolean;
 }): Promise<string> {
   const context = readContext(options.configPath);
+  if (options.node?.trim()) {
+    resolveNodeTarget(context, options.node.trim());
+  }
   const targets = options.node?.trim()
     ? [options.node.trim()]
     : (await runRemoteJsonLines(context, "docker node ls --format '{{json .}}'")).map(
@@ -941,6 +953,9 @@ async function updateKeepalivedForTarget(context: RuntimeContext, targetNode: Sw
 
   if (!password?.trim()) {
     throw new Error(`Missing VRRP password in ${context.config.keepalived.authPassEnv}.`);
+  }
+  if (/[\r\n]/.test(password)) {
+    throw new Error("VRRP password must not contain newline characters.");
   }
 
   for (const node of context.config.nodes) {
@@ -1023,6 +1038,8 @@ export async function switchClusterLeader(options: {
         .map((entry) => entry.trim())
         .filter(Boolean)
         .filter((entry) => entry !== targetHostname);
+
+      managers.forEach(validateRemoteHostname);
 
       const demoted: string[] = [];
       try {

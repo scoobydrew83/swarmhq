@@ -9,6 +9,7 @@ import {
   createConfigBuilderDefaults,
   loadConfigIfPresent,
   resolveConfigPath,
+  resolveEnvPath,
   saveConfigBuilderInput,
   type ConfigBuilderInput,
   type ActivityEntry,
@@ -87,12 +88,16 @@ function isAuthorized(req: http.IncomingMessage, token: string): boolean {
 function readRequestBody(req: http.IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
+    let size = 0;
 
-    req.on("data", (chunk) => {
-      chunks.push(Buffer.from(chunk));
-      if (Buffer.concat(chunks).length > 1_000_000) {
+    req.on("data", (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > 1_000_000) {
+        req.destroy();
         reject(new Error("Request body too large"));
+        return;
       }
+      chunks.push(Buffer.from(chunk));
     });
 
     req.on("end", () => {
@@ -209,8 +214,6 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
     if (url.pathname === "/api/session") {
       sendJson(res, 200, {
         token,
-        configPath: initial?.path ?? resolvedConfigPath,
-        envPath: createConfigBuilderDefaults(options.configPath).input.envPath,
         appName: COMMAND_CATALOG.appName,
       });
       return;
@@ -287,7 +290,22 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
       }
 
       if (url.pathname === "/api/setup/defaults") {
-        sendJson(res, 200, { defaults: createConfigBuilderDefaults(options.configPath) });
+        const defaults = createConfigBuilderDefaults(options.configPath);
+        const hasVrrpPassword = Boolean(defaults.input.vrrpPassword?.trim());
+        const hasTailscaleAuthKey = Boolean(defaults.input.tailscaleAuthKey?.trim());
+        const { vrrpPassword: _vp, tailscaleAuthKey: _tk, ...safeInput } = defaults.input;
+        sendJson(res, 200, {
+          defaults: {
+            hasExistingConfig: defaults.hasExistingConfig,
+            hasVrrpPassword,
+            hasTailscaleAuthKey,
+            input: {
+              ...safeInput,
+              configPath: initial?.path ?? resolvedConfigPath,
+              envPath: resolveEnvPath(options.configPath),
+            },
+          },
+        });
         return;
       }
 
