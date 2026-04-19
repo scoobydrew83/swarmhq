@@ -407,7 +407,7 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
               sendJson(res, 200, { result, activity: finishedActivity });
             } catch (commandError) {
               const message =
-                commandError instanceof Error ? commandError.message : String(commandError);
+                commandError instanceof Error ? commandError.message : "Command execution failed";
               const failedActivity: ActivityEntry = {
                 ...baseActivity,
                 status: "error",

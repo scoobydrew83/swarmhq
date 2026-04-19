@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-04-19
+
+### Fixed
+- Completed CodeQL `js/stack-trace-exposure` remediation — the inner `catch (commandError)` block in the UI server still used `String(commandError)` as a fallback, which could expose internal details; replaced with a generic message
+- Documentation verification CI workflow now uses `workflow_dispatch` via a dedicated dispatcher, since `claude-code-action` does not support `push` events
+
 ## [0.1.2] - 2026-04-19
 
 ### Fixed
