@@ -1,7 +1,8 @@
 import "./globals.css";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "swarm-cli",
   description: "Localhost cluster control room — swarm-cli",
 };
