@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "clusterName": "example-swarm",
+  "vip": "198.51.100.10",
+  "nodes": [
+    {
+      "id": "manager-a",
+      "host": "198.51.100.11",
+      "username": "admin",
+      "roles": ["manager"],
+      "keepalived": {
+        "priority": 120,
+        "state": "MASTER"
+      }
+    },
+    {
+      "id": "manager-b",
+      "host": "198.51.100.12",
+      "username": "admin",
+      "roles": ["manager"],
+      "keepalived": {
+        "priority": 110
+      }
+    },
+    {
+      "id": "worker-a",
+      "host": "198.51.100.21",
+      "username": "deploy",
+      "roles": ["worker"]
+    }
+  ],
+  "keepalived": {
+    "enabled": true,
+    "interface": "eth0",
+    "routerId": "SWARMCLI",
+    "virtualRouterId": 51,
+    "advertisementInterval": 1,
+    "authPassEnv": "SWARM_VRRP_PASSWORD"
+  },
+  "ssh": {
+    "port": 22,
+    "strictHostKeyChecking": "accept-new"
+  },
+  "redaction": {
+    "hideIps": false,
+    "storeCommandHistory": false
+  }
+}

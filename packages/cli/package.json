@@ -1,0 +1,23 @@
+{
+  "name": "swarm-cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "swarm-cli": "./dist/bin.js"
+  },
+  "main": "./dist/bin.js",
+  "types": "./dist/bin.d.ts",
+  "files": [
+    "dist",
+    "ui-dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "bundle:ui": "node ./scripts/copy-ui.mjs"
+  },
+  "dependencies": {
+    "@swarm-cli/core": "0.1.0"
+  }
+}

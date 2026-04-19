@@ -1,0 +1,21 @@
+{
+  "name": "swarm-cli-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @swarm-cli/core && npm run build -w swarm-cli && npm run build -w @swarm-cli/ui && npm run bundle:ui -w swarm-cli",
+    "typecheck": "npm run typecheck -w @swarm-cli/core && npm run typecheck -w swarm-cli && npm run typecheck -w @swarm-cli/ui",
+    "dev:ui": "npm run dev -w @swarm-cli/ui",
+    "ui": "npm run build && node packages/cli/dist/bin.js ui",
+    "ui:no-open": "npm run build && node packages/cli/dist/bin.js ui --no-open"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "typescript": "^5.7.2"
+  }
+}
