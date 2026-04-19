@@ -45,7 +45,8 @@
     "bundle:ui": "node ./scripts/copy-ui.mjs",
     "prepublishOnly": "npm run typecheck -w @swarm-cli/core && npm run typecheck -w swarm-cli"
   },
-  "dependencies": {
-    "@swarm-cli/core": "0.1.0"
+  "devDependencies": {
+    "@swarm-cli/core": "0.1.0",
+    "tsup": "^8.5.1"
   }
 }
