@@ -166,7 +166,8 @@ export default function Page() {
 
   // ── Reset values on command change ─────────────────────────────────
   useEffect(() => {
-    if (!catalog || !selectedCommandId) return;
+    if (!catalog) return;
+    if (!selectedCommandId) { setValues({}); setCommandError(null); return; }
     setValues(buildDefaultValues(catalog, selectedCommandId));
     setCommandError(null);
   }, [catalog, selectedCommandId]);

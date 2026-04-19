@@ -89,6 +89,19 @@ export function CommandCenter({
   );
 }
 
+const SIDEBAR_ICONS: Record<string, string> = {
+  health: "monitor_heart",
+  nodes: "hub",
+  leader: "stars",
+  ps: "list",
+  services: "settings_input_component",
+  service: "publish",
+  scale: "reorder",
+  config: "settings_ethernet",
+  redact: "visibility_off",
+  ui: "open_in_browser",
+};
+
 /** Command navigation sidebar — rendered separately from the command bar. */
 export function SidebarNav({
   catalog,
@@ -98,18 +111,6 @@ export function SidebarNav({
 }: Pick<CommandCenterProps, "catalog" | "selectedCommandId" | "onSelectCommand"> & {
   selectedGroup: string;
 }) {
-  const ICONS: Record<string, string> = {
-    health: "monitor_heart",
-    nodes: "hub",
-    leader: "stars",
-    ps: "list",
-    services: "settings_input_component",
-    service: "publish",
-    scale: "reorder",
-    config: "settings_ethernet",
-    redact: "visibility_off",
-    ui: "open_in_browser",
-  };
 
   const commands = catalog.commands.filter((c) => c.groupId === selectedGroup);
 
@@ -125,7 +126,7 @@ export function SidebarNav({
             title={cmd.summary}
           >
             <span className="ms cmd-icon">
-              {ICONS[cmd.id] ?? "terminal"}
+              {SIDEBAR_ICONS[cmd.id] ?? "terminal"}
             </span>
             <span>{cmd.label}</span>
           </button>
