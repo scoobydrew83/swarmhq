@@ -272,7 +272,7 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
               },
             });
           } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
+            const message = error instanceof Error ? error.message : "Internal server error";
             sendJson(res, 500, { error: message });
           }
         })();
@@ -323,7 +323,7 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
             });
             sendJson(res, 200, { result });
           } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
+            const message = error instanceof Error ? error.message : "Bad request";
             sendJson(res, 400, { error: message });
           }
         })();
@@ -420,7 +420,7 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
               sendJson(res, 500, { error: message, activity: failedActivity });
             }
           } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
+            const message = error instanceof Error ? error.message : "Bad request";
             sendJson(res, 400, { error: message });
           }
         })();
