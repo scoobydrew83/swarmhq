@@ -1,6 +1,6 @@
 {
   "name": "swarmhq",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Docker Swarm management CLI with an embedded localhost dashboard",
   "bin": {
