@@ -20,11 +20,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/scoobydrew83/swarm-cli.git"
+    "url": "git+https://github.com/scoobydrew83/swarmhq.git"
   },
-  "homepage": "https://github.com/scoobydrew83/swarm-cli#readme",
+  "homepage": "https://github.com/scoobydrew83/swarmhq#readme",
   "bugs": {
-    "url": "https://github.com/scoobydrew83/swarm-cli/issues"
+    "url": "https://github.com/scoobydrew83/swarmhq/issues"
   },
   "keywords": [
     "docker",
