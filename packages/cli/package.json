@@ -4,10 +4,8 @@
   "type": "module",
   "description": "Docker Swarm management CLI with an embedded localhost dashboard",
   "bin": {
-    "swarm-cli": "./dist/bin.js"
+    "swarm-cli": "dist/bin.js"
   },
-  "main": "./dist/bin.js",
-  "types": "./dist/bin.d.ts",
   "files": [
     "dist",
     "ui-dist",
