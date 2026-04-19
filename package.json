@@ -5,9 +5,18 @@
   "workspaces": [
     "packages/*"
   ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "build": "npm run build -w @swarm-cli/core && npm run build -w swarm-cli && npm run build -w @swarm-cli/ui && npm run bundle:ui -w swarm-cli",
-    "typecheck": "npm run typecheck -w @swarm-cli/core && npm run typecheck -w swarm-cli && npm run typecheck -w @swarm-cli/ui",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint packages/*/src --ext .ts,.tsx",
+    "lint:fix": "eslint packages/*/src --ext .ts,.tsx --fix",
+    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "dev:ui": "npm run dev -w @swarm-cli/ui",
     "ui": "npm run build && node packages/cli/dist/bin.js ui",
     "ui:no-open": "npm run build && node packages/cli/dist/bin.js ui --no-open"
@@ -16,6 +25,12 @@
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "typescript": "^5.7.2"
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@vitest/coverage-v8": "^2.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.0.0"
   }
 }

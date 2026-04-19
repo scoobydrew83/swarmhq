@@ -2,6 +2,7 @@
   "name": "swarm-cli",
   "version": "0.1.0",
   "type": "module",
+  "description": "Docker Swarm management CLI with an embedded localhost dashboard",
   "bin": {
     "swarm-cli": "./dist/bin.js"
   },
@@ -12,10 +13,37 @@
     "ui-dist",
     "README.md"
   ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scoobydrew83/swarm-cli.git"
+  },
+  "homepage": "https://github.com/scoobydrew83/swarm-cli#readme",
+  "bugs": {
+    "url": "https://github.com/scoobydrew83/swarm-cli/issues"
+  },
+  "keywords": [
+    "docker",
+    "swarm",
+    "cli",
+    "devops",
+    "cluster",
+    "keepalived",
+    "ssh",
+    "dashboard",
+    "management"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "bundle:ui": "node ./scripts/copy-ui.mjs"
+    "bundle:ui": "node ./scripts/copy-ui.mjs",
+    "prepublishOnly": "npm run typecheck -w @swarm-cli/core && npm run typecheck -w swarm-cli"
   },
   "dependencies": {
     "@swarm-cli/core": "0.1.0"
