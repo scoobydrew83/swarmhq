@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-04-19
+
+### Fixed
+- TypeScript 6 compatibility: added `"types": ["node"]` to `packages/cli` and `packages/core` tsconfigs — TypeScript 6 no longer implicitly includes Node.js globals under `NodeNext` resolution
+- Removed potential stack trace exposure in HTTP error responses — non-`Error` exceptions no longer serialize internal details to API clients
+
+### Changed
+- Upgraded TypeScript from 5.9 to 6.0.3
+- Upgraded React and React DOM from 18.3 to 19.2.5
+- Upgraded Next.js from 15.5 to 16.2.4
+- Upgraded vitest and @vitest/coverage-v8 from 2.1.9 to 4.1.4
+- Upgraded @types/node from 22 to 25.6.0
+
 ## [0.1.1] - 2026-04-19
 
 ### Fixed
