@@ -40,7 +40,7 @@
     "management"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "bundle:ui": "node ./scripts/copy-ui.mjs",
     "prepublishOnly": "npm run typecheck -w @swarm-cli/core && npm run typecheck -w swarm-cli"
