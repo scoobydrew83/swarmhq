@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { runConfigCommand } from "./commands/config.js";
 import { runHealthCommand } from "./commands/health.js";
 import { runLeaderCommand } from "./commands/leader.js";
