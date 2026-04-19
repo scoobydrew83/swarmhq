@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 import {
   COMMAND_CATALOG,
   createConfigBuilderDefaults,
-  loadConfig,
   loadConfigIfPresent,
   resolveConfigPath,
   saveConfigBuilderInput,
