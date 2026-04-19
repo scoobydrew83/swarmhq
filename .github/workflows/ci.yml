@@ -10,6 +10,8 @@ jobs:
   test:
     name: Test (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         node-version: [20, 22]
@@ -41,94 +43,147 @@ jobs:
       - name: Security audit
         run: npm audit --audit-level=high
 
+      - name: Publish dry-run (Node 22 only)
+        if: matrix.node-version == 22
+        working-directory: packages/cli
+        run: npm publish --dry-run
+
   publish-beta:
     name: Publish Beta
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: beta
     permissions:
       contents: write
       id-token: write
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          registry-url: https://registry.npmjs.org/
+          node-version: 22
           cache: npm
 
+      - name: Check for pre-release version bump
+        id: version
+        run: |
+          CURR_VERSION=$(node -p "require('./packages/cli/package.json').version")
+          PREV_VERSION=$(git show HEAD~1:packages/cli/package.json | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" 2>/dev/null || echo "0.0.0")
+          echo "Current: v${CURR_VERSION}, Previous: v${PREV_VERSION}"
+          if [ "${CURR_VERSION}" != "${PREV_VERSION}" ] && [[ "${CURR_VERSION}" == *"-"* ]]; then
+            echo "Pre-release bump: v${PREV_VERSION} → v${CURR_VERSION}"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No pre-release bump detected"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=${CURR_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Create pre-release git tag
+        if: steps.version.outputs.changed == 'true'
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -d "v${RELEASE_VERSION}" 2>/dev/null || true
+          git push origin ":refs/tags/v${RELEASE_VERSION}" 2>/dev/null || true
+          git tag -a "v${RELEASE_VERSION}" -m "Pre-release v${RELEASE_VERSION}"
+          git push origin "v${RELEASE_VERSION}"
+
       - name: Install dependencies
+        if: steps.version.outputs.changed == 'true'
         run: npm ci
 
       - name: Build all
+        if: steps.version.outputs.changed == 'true'
         run: npm run build
 
-      - name: Check for pre-release version
-        id: version-check
-        working-directory: packages/cli
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          if echo "$VERSION" | grep -qE "(alpha|beta|rc)"; then
-            echo "is_prerelease=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_prerelease=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Publish beta to npm
-        if: steps.version-check.outputs.is_prerelease == 'true'
+        if: steps.version.outputs.changed == 'true'
         working-directory: packages/cli
-        run: npm publish --tag beta --provenance --access public
+        run: npx npm@latest publish --provenance --access public --tag beta
+
+      - name: Create GitHub Pre-Release
+        if: steps.version.outputs.changed == 'true'
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh release create "v${VERSION}" --generate-notes --prerelease
 
   publish:
     name: Publish Release
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
     permissions:
       contents: write
       id-token: write
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          registry-url: https://registry.npmjs.org/
+          node-version: 22
           cache: npm
 
+      - name: Check for version bump
+        id: version
+        run: |
+          CURR_VERSION=$(node -p "require('./packages/cli/package.json').version")
+          PREV_VERSION=$(git show HEAD~1:packages/cli/package.json | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" 2>/dev/null || echo "0.0.0")
+          echo "Current: v${CURR_VERSION}, Previous: v${PREV_VERSION}"
+          if [[ "${CURR_VERSION}" == *"-"* ]]; then
+            echo "ERROR: pre-release version ${CURR_VERSION} must not be published from main (use develop instead)"
+            exit 1
+          fi
+          if [ "${CURR_VERSION}" != "${PREV_VERSION}" ]; then
+            echo "Version bump: v${PREV_VERSION} → v${CURR_VERSION}"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No version change (${CURR_VERSION})"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=${CURR_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Create git tag
+        if: steps.version.outputs.changed == 'true'
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -d "v${RELEASE_VERSION}" 2>/dev/null || true
+          git push origin ":refs/tags/v${RELEASE_VERSION}" 2>/dev/null || true
+          git tag -a "v${RELEASE_VERSION}" -m "Release v${RELEASE_VERSION}"
+          git push origin "v${RELEASE_VERSION}"
+
       - name: Install dependencies
+        if: steps.version.outputs.changed == 'true'
         run: npm ci
 
       - name: Build all
+        if: steps.version.outputs.changed == 'true'
         run: npm run build
 
-      - name: Check version (reject pre-release on main)
-        id: version-check
-        working-directory: packages/cli
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          if echo "$VERSION" | grep -qE "(alpha|beta|rc)"; then
-            echo "ERROR: Pre-release version $VERSION cannot be published to latest from main."
-            exit 1
-          fi
-
       - name: Publish to npm
+        if: steps.version.outputs.changed == 'true'
         working-directory: packages/cli
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx npm@latest publish --provenance --access public
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version-check.outputs.version }}
-          generate_release_notes: true
+        if: steps.version.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh release create "v${VERSION}" --generate-notes
