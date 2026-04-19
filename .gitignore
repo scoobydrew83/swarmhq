@@ -18,3 +18,4 @@ swarm.config.local.json
 .stitch/
 .superpowers/
 .worktrees/
+.claude/
