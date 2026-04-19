@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial public release scaffold
-- Full monorepo structure: `@swarm-cli/core`, `swarm-cli`, `@swarm-cli/ui`
+- Full monorepo structure: `@swarmhq/core`, `swarmhq`, `@swarmhq/ui`
 - 26 catalog commands across 5 groups: observability, configuration, operations, maintenance, security
 - Localhost Next.js dashboard with command center, node roster, activity feed
 - Interactive setup wizard (GUI + CLI)

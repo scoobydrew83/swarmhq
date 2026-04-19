@@ -11,7 +11,7 @@ import {
   type CommandExecutionRequest,
   type CommandExecutionResult,
   type HostKeyCheckingMode,
-} from "@swarm-cli/core";
+} from "@swarmhq/core";
 
 function getCommandDefinition(commandId: string): CommandDefinition {
   const definition = COMMAND_CATALOG.commands.find((command) => command.id === commandId);

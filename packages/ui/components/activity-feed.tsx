@@ -1,4 +1,4 @@
-import type { ActivityEntry } from "@swarm-cli/core";
+import type { ActivityEntry } from "@swarmhq/core";
 import { StatusPill } from "./status-pill";
 
 interface ActivityFeedProps {

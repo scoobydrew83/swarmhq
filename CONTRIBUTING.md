@@ -1,4 +1,4 @@
-# Contributing to swarm-cli
+# Contributing to swarmhq
 
 Thank you for your interest in contributing! This guide covers how to set up the project locally and submit changes.
 
@@ -11,8 +11,8 @@ Thank you for your interest in contributing! This guide covers how to set up the
 ## Local Setup
 
 ```bash
-git clone https://github.com/scoobydrew83/swarm-cli.git
-cd swarm-cli
+git clone https://github.com/scoobydrew83/swarmhq.git
+cd swarmhq
 npm install
 npm run build
 ```
@@ -73,4 +73,4 @@ docs: add ROADMAP phase 2 items
 
 ## Reporting Issues
 
-Open an issue at https://github.com/scoobydrew83/swarm-cli/issues
+Open an issue at https://github.com/scoobydrew83/swarmhq/issues

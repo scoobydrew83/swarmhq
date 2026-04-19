@@ -46,7 +46,7 @@ export async function runServiceCommand(args: string[]): Promise<void> {
       return;
     default:
       console.log(
-        "swarm-cli service <inspect|tasks> --name SERVICE [--config PATH] [--context NAME] [--all] [--json]",
+        "swarmhq service <inspect|tasks> --name SERVICE [--config PATH] [--context NAME] [--all] [--json]",
       );
   }
 }

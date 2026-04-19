@@ -1,4 +1,4 @@
-import type { CommandCatalog, CommandDefinition, PicklistDefinition } from "@swarm-cli/core";
+import type { CommandCatalog, CommandDefinition, PicklistDefinition } from "@swarmhq/core";
 import { FieldControl } from "./field-control";
 
 interface CommandCenterProps {

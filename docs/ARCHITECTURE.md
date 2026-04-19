@@ -2,9 +2,9 @@
 
 ## Packages
 
-- `@swarm-cli/core`: shared models and security-focused utilities
-- `swarm-cli`: the npm bin plus localhost API server
-- `@swarm-cli/ui`: a Next.js app exported as static assets
+- `@swarmhq/core`: shared models and security-focused utilities
+- `swarmhq`: the npm bin plus localhost API server
+- `@swarmhq/ui`: a Next.js app exported as static assets
 
 ## Security Defaults
 
@@ -17,7 +17,7 @@
 
 ## UI Flow
 
-1. `swarm-cli ui` loads config and generates a session token.
+1. `swarmhq ui` loads config and generates a session token.
 2. The CLI starts a localhost HTTP server on a random free port.
 3. Static UI assets are served from `packages/cli/ui-dist` or `packages/ui/out`.
 4. Browser requests call constrained API routes such as `/api/session`, `/api/config`, and `/api/health`.

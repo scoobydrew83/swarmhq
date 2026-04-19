@@ -14,7 +14,7 @@ import {
   type ConfigBuilderInput,
   type ActivityEntry,
   type CommandExecutionRequest,
-} from "@swarm-cli/core";
+} from "@swarmhq/core";
 import { buildCliInvocation, runCliRequest } from "../command-bridge.js";
 import { buildRemoteHealthReport } from "../cluster-runtime.js";
 
@@ -439,7 +439,7 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>swarm-cli ui</title>
+    <title>swarmhq ui</title>
     <style>
       body { font-family: sans-serif; margin: 40px; background: #f7f7f2; color: #172119; }
       main { max-width: 720px; }
@@ -448,9 +448,9 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
   </head>
   <body>
     <main>
-      <h1>swarm-cli ui</h1>
+      <h1>swarmhq ui</h1>
       <p>The local API server is running, but exported UI assets were not found.</p>
-      <p>Build the UI with <code>npm run build -w @swarm-cli/ui</code> and then copy it with <code>npm run bundle:ui -w swarm-cli</code>.</p>
+      <p>Build the UI with <code>npm run build -w @swarmhq/ui</code> and then copy it with <code>npm run bundle:ui -w swarmhq</code>.</p>
       <p>Config path: <code>${initial?.path ?? resolvedConfigPath}</code></p>
     </main>
   </body>

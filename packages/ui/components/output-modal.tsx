@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import type { CommandExecutionResult } from "@swarm-cli/core";
+import type { CommandExecutionResult } from "@swarmhq/core";
 
 interface OutputModalProps {
   result: CommandExecutionResult | null;

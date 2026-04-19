@@ -1,6 +1,6 @@
 # Roadmap
 
-This document outlines the planned development trajectory for `swarm-cli`. Items are grouped by phase.
+This document outlines the planned development trajectory for `swarmhq`. Items are grouped by phase.
 Phases are indicative of priority, not strict release milestones.
 
 ## Current State (v0.1.x)
@@ -22,8 +22,8 @@ The initial release ships a functional Docker Swarm management tool with:
 > Goal: Make the project production-ready for contributors and daily use.
 
 - [ ] **Shell completions** — bash/zsh/fish autocomplete for commands and flags
-- [ ] **`swarm-cli version`** — print CLI version from package.json
-- [ ] **`swarm-cli help <command>`** — per-command help with flag descriptions
+- [ ] **`swarmhq version`** — print CLI version from package.json
+- [ ] **`swarmhq help <command>`** — per-command help with flag descriptions
 - [ ] **Test suite expansion** — unit tests for cluster-runtime, command-bridge, docker-runtime
 - [ ] **Error codes** — structured exit codes for scripting (0 success, 1 general error, 2 config error, 3 connectivity error)
 - [ ] **Config validation improvements** — better error messages when config is malformed or missing required fields
@@ -35,12 +35,12 @@ The initial release ships a functional Docker Swarm management tool with:
 
 > Goal: Cover all core Docker Swarm primitives via CLI + dashboard.
 
-- [ ] **Stacks** — `swarm-cli stack deploy`, `stack ls`, `stack ps`, `stack rm`, `stack services`
-- [ ] **Secrets** — `swarm-cli secret create`, `secret ls`, `secret rm`, `secret inspect`
-- [ ] **Configs** — `swarm-cli config create`, `config ls`, `config rm`, `config inspect`
-- [ ] **Networks** — `swarm-cli network ls`, `network inspect`, `network create`, `network rm`
-- [ ] **Node label management** — `swarm-cli node label add/rm` (currently nodes can only be listed)
-- [ ] **Logs streaming** — `swarm-cli logs <service>` with `--follow`, `--since`, `--tail`; streamed in dashboard
+- [ ] **Stacks** — `swarmhq stack deploy`, `stack ls`, `stack ps`, `stack rm`, `stack services`
+- [ ] **Secrets** — `swarmhq secret create`, `secret ls`, `secret rm`, `secret inspect`
+- [ ] **Configs** — `swarmhq config create`, `config ls`, `config rm`, `config inspect`
+- [ ] **Networks** — `swarmhq network ls`, `network inspect`, `network create`, `network rm`
+- [ ] **Node label management** — `swarmhq node label add/rm` (currently nodes can only be listed)
+- [ ] **Logs streaming** — `swarmhq logs <service>` with `--follow`, `--since`, `--tail`; streamed in dashboard
 - [ ] **Dashboard command catalog additions** — expose stacks, secrets, configs, networks in UI sidebar
 
 ---
@@ -49,9 +49,9 @@ The initial release ships a functional Docker Swarm management tool with:
 
 > Goal: Automate day-2 operations and improve reliability under real-world cluster conditions.
 
-- [ ] **Rolling deployment** — `swarm-cli deploy <stack-file>` with health-gate between node updates
+- [ ] **Rolling deployment** — `swarmhq deploy <stack-file>` with health-gate between node updates
 - [ ] **Cluster backup** — snapshot config + compose files + swarm state to a tarball
-- [ ] **Persistent audit log** — write command history to `~/.config/swarm-cli/audit.log` (JSONL)
+- [ ] **Persistent audit log** — write command history to `~/.config/swarmhq/audit.log` (JSONL)
 - [ ] **Notification webhooks** — emit events (leader change, node reboot, update) to Slack/webhook URLs configured in `.env`
 - [ ] **SSH key rotation helper** — distribute updated authorized_keys to all nodes
 - [ ] **Dashboard: dark/light theme polish** — respect OS preference on first load
@@ -68,8 +68,8 @@ The initial release ships a functional Docker Swarm management tool with:
 - [ ] **Prometheus metrics export** — expose `/metrics` endpoint from the UI server
 - [ ] **Container registry integration** — show image digests, detect registry auth issues
 - [ ] **TUI mode** — alternative terminal-only dashboard (no browser required) using `blessed` or `ink`
-- [ ] **Plugin system** — `~/.config/swarm-cli/plugins/` directory for user-defined commands
-- [ ] **`swarm-cli init` interactive** — guided first-run wizard that detects existing Docker contexts and offers to import node topology
+- [ ] **Plugin system** — `~/.config/swarmhq/plugins/` directory for user-defined commands
+- [ ] **`swarmhq init` interactive** — guided first-run wizard that detects existing Docker contexts and offers to import node topology
 - [ ] **Windows/WSL2 support** — tested setup guide + CI matrix for Windows runners
 
 ---

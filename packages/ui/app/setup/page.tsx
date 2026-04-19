@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { ConfigBuilderDefaults, ConfigBuilderInput, ConfigBuilderSaveResult, NodeRole } from "@swarm-cli/core";
+import type { ConfigBuilderDefaults, ConfigBuilderInput, ConfigBuilderSaveResult, NodeRole } from "@swarmhq/core";
 import { ThemeToggle } from "../../components/theme-toggle";
 
 type SessionPayload = {
@@ -105,7 +105,7 @@ export default function SetupPage() {
       {/* ── TOP NAV ──────────────────────────────────────────────── */}
       <header className="setup-topnav">
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span className="wordmark">swarm-cli</span>
+          <span className="wordmark">swarmhq</span>
           <div className="nav-sep" />
           <span style={{ fontFamily: "var(--font-ui)", fontSize: "0.8125rem", fontWeight: 600, color: "var(--text-muted)" }}>
             Setup Wizard

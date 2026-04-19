@@ -13,10 +13,10 @@ import { runUpdateCommand } from "./commands/update.js";
 const VERSION = "0.1.0";
 
 function showHelp(): void {
-  console.log(`swarm-cli ${VERSION}
+  console.log(`swarmhq ${VERSION}
 
 Usage:
-  swarm-cli <command> [options]
+  swarmhq <command> [options]
 
 Commands:
   config   Show, initialize, or locate config
@@ -32,16 +32,16 @@ Commands:
   ui       Start the localhost dashboard
 
 Examples:
-  swarm-cli config init
-  swarm-cli health --json
-  swarm-cli health --detailed
-  swarm-cli health --config ~/.config/swarm-cli/config.json
-  swarm-cli leader switch --target docker --yes
-  swarm-cli reboot list
-  swarm-cli update check
-  swarm-cli update services --json
-  swarm-cli nodes --context production
-  swarm-cli ui --no-open
+  swarmhq config init
+  swarmhq health --json
+  swarmhq health --detailed
+  swarmhq health --config ~/.config/swarmhq/config.json
+  swarmhq leader switch --target docker --yes
+  swarmhq reboot list
+  swarmhq update check
+  swarmhq update services --json
+  swarmhq nodes --context production
+  swarmhq ui --no-open
 `);
 }
 

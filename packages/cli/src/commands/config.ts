@@ -7,7 +7,7 @@ import {
   type HostKeyCheckingMode,
   type KeepalivedState,
   type NodeRole,
-} from "@swarm-cli/core";
+} from "@swarmhq/core";
 import { executeCommand } from "../command-runtime.js";
 
 function readFlagValue(args: string[], flag: string): string | undefined {
@@ -309,7 +309,7 @@ export async function runConfigCommand(args: string[]): Promise<void> {
       return;
     default:
       console.log(
-        "swarm-cli config <show|path|init|wizard> [--config PATH] [--env PATH] [--json] [--cluster-name NAME] [--vip ADDRESS] [--ssh-mode MODE] [--hide-ips] [--force]",
+        "swarmhq config <show|path|init|wizard> [--config PATH] [--env PATH] [--json] [--cluster-name NAME] [--vip ADDRESS] [--ssh-mode MODE] [--hide-ips] [--force]",
       );
   }
 }

@@ -1,8 +1,8 @@
 import type { CommandCatalog } from "./types.js";
 
 export const COMMAND_CATALOG: CommandCatalog = {
-  appName: "swarm-cli",
-  pageTitle: "swarm-cli Control Room",
+  appName: "swarmhq",
+  pageTitle: "swarmhq Control Room",
   groups: [
     {
       id: "observability",

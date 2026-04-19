@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`swarm-cli` is a TypeScript monorepo CLI tool for managing Docker Swarm clusters with an embedded, locally-hosted Next.js dashboard. It is published to npm as the `swarm-cli` binary.
+`swarmhq` is a TypeScript monorepo CLI tool for managing Docker Swarm clusters with an embedded, locally-hosted Next.js dashboard. It is published to npm as the `swarmhq` binary.
 
 ## Workspace Structure
 
@@ -12,11 +12,11 @@ Three npm workspace packages under `packages/`:
 
 | Package | Directory | Role |
 |---|---|---|
-| `@swarm-cli/core` | `packages/core/` | Shared types, config I/O, command catalog, redaction |
-| `swarm-cli` | `packages/cli/` | CLI binary, HTTP server, Docker runtime |
-| `@swarm-cli/ui` | `packages/ui/` | Next.js static dashboard (private, bundled into CLI) |
+| `@swarmhq/core` | `packages/core/` | Shared types, config I/O, command catalog, redaction |
+| `swarmhq` | `packages/cli/` | CLI binary, HTTP server, Docker runtime |
+| `@swarmhq/ui` | `packages/ui/` | Next.js static dashboard (private, bundled into CLI) |
 
-Dependency flow: `@swarm-cli/ui` and `swarm-cli` both depend on `@swarm-cli/core`. The UI communicates with the CLI via `/api/*` routes served by `ui-server.ts`.
+Dependency flow: `@swarmhq/ui` and `swarmhq` both depend on `@swarmhq/core`. The UI communicates with the CLI via `/api/*` routes served by `ui-server.ts`.
 
 ## Commands
 
@@ -31,12 +31,12 @@ npm run typecheck
 npm run dev:ui
 
 # Build individual packages
-npm run build -w @swarm-cli/core
-npm run build -w swarm-cli
-npm run build -w @swarm-cli/ui
+npm run build -w @swarmhq/core
+npm run build -w swarmhq
+npm run build -w @swarmhq/ui
 
 # Bundle Next.js output into CLI dist (run after ui build)
-npm run bundle:ui -w swarm-cli
+npm run bundle:ui -w swarmhq
 ```
 
 No test or lint scripts are currently defined.
@@ -45,7 +45,7 @@ No test or lint scripts are currently defined.
 
 ### Core Package (`packages/core/src/`)
 - `types.ts` — All shared TypeScript interfaces (`SwarmConfig`, `SwarmNode`, `KeepalivedConfig`, etc.)
-- `config.ts` — `loadConfig`, `saveConfig`, `resolveConfigPath`; reads `~/.config/swarm-cli/config.json`
+- `config.ts` — `loadConfig`, `saveConfig`, `resolveConfigPath`; reads `~/.config/swarmhq/config.json`
 - `catalog.ts` — `COMMAND_CATALOG`: typed definitions of every CLI command (schema, not arbitrary shell execution)
 - `redact.ts` — Security redaction utilities
 - `paths.ts` — File path resolution helpers
@@ -67,13 +67,13 @@ No test or lint scripts are currently defined.
 
 ## Runtime & Configuration
 
-**Config file**: `~/.config/swarm-cli/config.json` — cluster topology, Keepalived HA settings, SSH defaults, redaction policies.
+**Config file**: `~/.config/swarmhq/config.json` — cluster topology, Keepalived HA settings, SSH defaults, redaction policies.
 
-**Secrets** (never in config.json): `~/.config/swarm-cli/.env`
+**Secrets** (never in config.json): `~/.config/swarmhq/.env`
 - `SWARM_VRRP_PASSWORD` — Keepalived auth
 - `SWARM_TAILSCALE_AUTHKEY` — Optional automation
 - `SWARM_CONFIG_FILE` — Override config location
-- `SWARM_UI_OPEN` — Auto-open browser on `swarm-cli ui`
+- `SWARM_UI_OPEN` — Auto-open browser on `swarmhq ui`
 
 The UI server binds localhost-only with a random session token per launch.
 

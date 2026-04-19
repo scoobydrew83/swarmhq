@@ -1,4 +1,4 @@
-import type { SwarmNode } from "@swarm-cli/core";
+import type { SwarmNode } from "@swarmhq/core";
 import { StatusPill } from "./status-pill";
 
 interface NodeRosterProps {

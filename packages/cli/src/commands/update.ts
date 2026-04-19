@@ -107,7 +107,7 @@ export async function runUpdateCommand(args: string[]): Promise<void> {
       return;
     default:
       console.log(
-        "swarm-cli update <check|node|all|services|service|containers|container> [--config PATH] [--target NODE] [--name NAME] [--mode all|os|docker] [--os] [--docker] [--exclude NODE1,NODE2] [--skip-reboot] [--json] [--yes]",
+        "swarmhq update <check|node|all|services|service|containers|container> [--config PATH] [--target NODE] [--name NAME] [--mode all|os|docker] [--os] [--docker] [--exclude NODE1,NODE2] [--skip-reboot] [--json] [--yes]",
       );
   }
 }

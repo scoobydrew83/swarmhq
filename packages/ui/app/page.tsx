@@ -7,7 +7,7 @@ import type {
   CommandExecutionResult,
   HealthSnapshot,
   SwarmConfig,
-} from "@swarm-cli/core";
+} from "@swarmhq/core";
 import { ActivityFeed } from "../components/activity-feed";
 import { CommandCenter, SidebarNav } from "../components/command-center";
 import { NodeRoster } from "../components/node-roster";
@@ -78,8 +78,8 @@ async function readErrorMessage(response: Response, fallback: string): Promise<s
 }
 
 const EMPTY_CATALOG: CommandCatalog = {
-  appName: "swarm-cli",
-  pageTitle: "swarm-cli",
+  appName: "swarmhq",
+  pageTitle: "swarmhq",
   groups: [],
   picklists: [],
   commands: [],
@@ -274,7 +274,7 @@ export default function Page() {
       {/* ── TOP NAV ──────────────────────────────────────────────── */}
       <header className="top-nav">
         <div className="top-nav-left">
-          <span className="wordmark">swarm-cli</span>
+          <span className="wordmark">swarmhq</span>
           <div className="nav-sep" />
           <div className="nav-meta">
             {health ? (

@@ -9,7 +9,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "build": "npm run build -w @swarm-cli/core && npm run build -w swarm-cli && npm run build -w @swarm-cli/ui && npm run bundle:ui -w swarm-cli",
+    "build": "npm run build -w @swarmhq/core && npm run build -w swarmhq && npm run build -w @swarmhq/ui && npm run bundle:ui -w swarmhq",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint packages/*/src --ext .ts,.tsx",
     "lint:fix": "eslint packages/*/src --ext .ts,.tsx --fix",
@@ -17,7 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "dev:ui": "npm run dev -w @swarm-cli/ui",
+    "dev:ui": "npm run dev -w @swarmhq/ui",
     "ui": "npm run build && node packages/cli/dist/bin.js ui",
     "ui:no-open": "npm run build && node packages/cli/dist/bin.js ui --no-open"
   },

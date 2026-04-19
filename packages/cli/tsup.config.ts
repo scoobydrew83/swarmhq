@@ -11,7 +11,7 @@ export default defineConfig({
   sourcemap: false,
   dts: false,
   bundle: true,
-  noExternal: ["@swarm-cli/core"],
+  noExternal: ["@swarmhq/core"],
   banner: {
     js: "#!/usr/bin/env node",
   },

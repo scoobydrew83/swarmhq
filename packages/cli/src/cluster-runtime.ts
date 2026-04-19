@@ -7,7 +7,7 @@ import {
   type HostKeyCheckingMode,
   type SwarmConfig,
   type SwarmNode,
-} from "@swarm-cli/core";
+} from "@swarmhq/core";
 
 const execFileAsync = promisify(execFile);
 
@@ -1518,7 +1518,7 @@ async function pullLatestImageDigest(
     const output = await runLeaderDockerCommand(
       context,
       buildBashCommand(
-        `docker pull ${shellEscape(image)} >/tmp/swarm-cli-pull.log 2>&1 && docker image inspect ${shellEscape(image)} --format "{{index .RepoDigests 0}}" 2>/dev/null | head -1`,
+        `docker pull ${shellEscape(image)} >/tmp/swarmhq-pull.log 2>&1 && docker image inspect ${shellEscape(image)} --format "{{index .RepoDigests 0}}" 2>/dev/null | head -1`,
       ),
     );
     const digest = output.includes("@") ? output.trim().split("@").pop() ?? null : null;
@@ -1599,7 +1599,7 @@ export async function updateServiceImage(options: {
   await runLeaderDockerCommand(
     context,
     buildBashCommand(
-      `docker pull ${shellEscape(image)} >/tmp/swarm-cli-service-update.log 2>&1 && docker service update --image ${shellEscape(image)} ${shellEscape(options.serviceName)}`,
+      `docker pull ${shellEscape(image)} >/tmp/swarmhq-service-update.log 2>&1 && docker service update --image ${shellEscape(image)} ${shellEscape(options.serviceName)}`,
     ),
   );
 

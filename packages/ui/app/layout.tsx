@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "swarm-cli",
-  description: "Localhost cluster control room — swarm-cli",
+  title: "swarmhq",
+  description: "Localhost cluster control room — swarmhq",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -1,4 +1,4 @@
-import type { CommandExecutionResult } from "@swarm-cli/core";
+import type { CommandExecutionResult } from "@swarmhq/core";
 
 interface ResultViewerProps {
   result: CommandExecutionResult | null;

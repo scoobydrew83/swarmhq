@@ -1,12 +1,12 @@
 # Configuration Guide
 
-`swarm-cli` separates non-secret cluster configuration from local secrets.
+`swarmhq` separates non-secret cluster configuration from local secrets.
 
 ## File Layout
 
-- `~/.config/swarm-cli/config.json`
-  Default non-secret cluster config used by both the CLI and `swarm-cli ui`.
-- `~/.config/swarm-cli/.env`
+- `~/.config/swarmhq/config.json`
+  Default non-secret cluster config used by both the CLI and `swarmhq ui`.
+- `~/.config/swarmhq/.env`
   Default local secrets file for values such as `SWARM_CONFIG_FILE` and `SWARM_VRRP_PASSWORD`.
 - `.env`
   If a repo-local `.env` already exists in the current working directory, the CLI will use it instead of the default env path.
@@ -24,7 +24,7 @@ SWARM_TAILSCALE_AUTHKEY=
 SWARM_UI_OPEN=true
 ```
 
-Use `SWARM_CONFIG_FILE` when your config lives somewhere other than `~/.config/swarm-cli/config.json`.
+Use `SWARM_CONFIG_FILE` when your config lives somewhere other than `~/.config/swarmhq/config.json`.
 
 Keep the VRRP password in the env file only. The config file stores the env var name to read, not the secret value itself.
 
@@ -117,9 +117,9 @@ Use per-node overrides under `nodes[].keepalived` when one node needs a differen
 
 Recommended flow:
 
-1. Create the default config directory with `mkdir -p ~/.config/swarm-cli`.
-2. Copy `examples/swarm.config.example.json` to `~/.config/swarm-cli/config.json`.
-3. Copy `.env.example` to `~/.config/swarm-cli/.env`.
+1. Create the default config directory with `mkdir -p ~/.config/swarmhq`.
+2. Copy `examples/swarm.config.example.json` to `~/.config/swarmhq/config.json`.
+3. Copy `.env.example` to `~/.config/swarmhq/.env`.
    If you are intentionally using a repo-local `.env`, you can copy it there instead.
 4. Fill in real node addresses and usernames in `config.json`.
 5. Fill in `SWARM_VRRP_PASSWORD` in the env file.
@@ -131,20 +131,20 @@ If you want repo-local config while testing, use a local file such as `swarm.con
 
 You can generate and save these files from either interface.
 
-- CLI: `swarm-cli config wizard`
+- CLI: `swarmhq config wizard`
   Interactive prompt that writes both config and env files.
-- CLI non-interactive: `swarm-cli config wizard --yes --config /path/to/config.json --env /path/to/.env`
+- CLI non-interactive: `swarmhq config wizard --yes --config /path/to/config.json --env /path/to/.env`
   Useful for scripted bootstrap or tests.
-- GUI: `swarm-cli ui`, then open `/setup`
+- GUI: `swarmhq ui`, then open `/setup`
   Dedicated builder UI for nodes, keepalived, and secret values.
 
 ## CLI And UI Behavior
 
 The CLI and UI read the same resolved config path.
 
-- `swarm-cli config show`
+- `swarmhq config show`
   Shows the active config path and values.
-- `swarm-cli ui`
+- `swarmhq ui`
   Starts the localhost UI and uses the same config resolution rules.
 
 If the UI looks different from the CLI, check `SWARM_CONFIG_FILE` first.
@@ -155,7 +155,7 @@ These local secret-bearing files are ignored by default:
 
 - `.env`
 - `.env.*` except `.env.example`
-- `.swarm-cli/`
+- `.swarmhq/`
 - `swarm.config.json`
 - `swarm.config.local.json`
 - `*.secret.json`

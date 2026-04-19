@@ -5,7 +5,7 @@ import {
   COMMAND_CATALOG,
   type CommandExecutionRequest,
   type CommandExecutionResult,
-} from "@swarm-cli/core";
+} from "@swarmhq/core";
 
 export type CliInvocation = {
   args: string[];
@@ -67,18 +67,18 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
         args.push("--detailed");
       }
       appendJsonFlag(args, values);
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "config.show": {
       const args = ["config", "show"];
       appendOptionalFlag(args, "--config", readString(values, "configPath"));
       appendJsonFlag(args, values);
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "config.path": {
       const args = ["config", "path"];
       appendOptionalFlag(args, "--config", readString(values, "configPath"));
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "config.init": {
       const args = ["config", "init"];
@@ -92,7 +92,7 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       if (readBoolean(values, "force")) {
         args.push("--force");
       }
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "security.redaction-preview": {
       const source = readString(values, "source", "config");
@@ -106,24 +106,24 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
         return {
           args,
           stdin: readString(values, "customText"),
-          displayCommand: `swarm-cli ${args.join(" ")}`,
+          displayCommand: `swarmhq ${args.join(" ")}`,
         };
       }
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "operations.nodes": {
       const args = ["nodes"];
       appendOptionalFlag(args, "--config", readString(values, "configPath"));
       appendOptionalFlag(args, "--context", readString(values, "context"));
       appendJsonFlag(args, values);
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "operations.services": {
       const args = ["services"];
       appendOptionalFlag(args, "--config", readString(values, "configPath"));
       appendOptionalFlag(args, "--context", readString(values, "context"));
       appendJsonFlag(args, values);
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "operations.service-inspect": {
       const args = ["service", "inspect"];
@@ -131,7 +131,7 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       appendOptionalFlag(args, "--context", readString(values, "context"));
       appendJsonFlag(args, values);
       appendOptionalFlag(args, "--name", readString(values, "serviceName"));
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "operations.service-tasks": {
       const args = ["service", "tasks"];
@@ -142,14 +142,14 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       }
       appendJsonFlag(args, values);
       appendOptionalFlag(args, "--name", readString(values, "serviceName"));
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "operations.leader": {
       const args = ["leader", "status"];
       appendOptionalFlag(args, "--config", readString(values, "configPath"));
       appendOptionalFlag(args, "--context", readString(values, "context"));
       appendJsonFlag(args, values);
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "operations.ps": {
       const args = ["ps"];
@@ -163,7 +163,7 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
         args.push(node.trim());
       }
       appendJsonFlag(args, values);
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "maintenance.leader-switch": {
       const args = ["leader", "switch"];
@@ -181,12 +181,12 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       if (readBoolean(values, "confirm")) {
         args.push("--yes");
       }
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "maintenance.reboot-list": {
       const args = ["reboot", "list"];
       appendOptionalFlag(args, "--config", readString(values, "configPath"));
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "maintenance.reboot-node": {
       const args = ["reboot", "node"];
@@ -203,20 +203,20 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       if (readBoolean(values, "confirm")) {
         args.push("--yes");
       }
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "maintenance.reboot-status": {
       const args = ["reboot", "status"];
       appendOptionalFlag(args, "--config", readString(values, "configPath"));
       appendOptionalFlag(args, "--target", readString(values, "target"));
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "maintenance.update-check": {
       const args = ["update", "check"];
       appendOptionalFlag(args, "--config", readString(values, "configPath"));
       appendOptionalFlag(args, "--target", readString(values, "target"));
       appendJsonFlag(args, values);
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "maintenance.update-node": {
       const args = ["update", "node"];
@@ -234,7 +234,7 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       if (readBoolean(values, "confirm")) {
         args.push("--yes");
       }
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "maintenance.update-all": {
       const args = ["update", "all"];
@@ -255,13 +255,13 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       if (readBoolean(values, "confirm")) {
         args.push("--yes");
       }
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "operations.service-update-scan": {
       const args = ["update", "services"];
       appendOptionalFlag(args, "--config", readString(values, "configPath"));
       appendJsonFlag(args, values);
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "maintenance.service-update": {
       const args = ["update", "service"];
@@ -270,13 +270,13 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       if (readBoolean(values, "confirm")) {
         args.push("--yes");
       }
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "operations.container-update-scan": {
       const args = ["update", "containers"];
       appendOptionalFlag(args, "--config", readString(values, "configPath"));
       appendJsonFlag(args, values);
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     case "maintenance.container-update": {
       const args = ["update", "container"];
@@ -285,7 +285,7 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       if (readBoolean(values, "confirm")) {
         args.push("--yes");
       }
-      return { args, displayCommand: `swarm-cli ${args.join(" ")}` };
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
     default:
       throw new Error(`No CLI bridge is defined for command ${request.commandId}`);

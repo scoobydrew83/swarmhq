@@ -1,14 +1,14 @@
-# swarm-cli
+# swarmhq
 
-[![npm version](https://img.shields.io/npm/v/swarm-cli.svg)](https://www.npmjs.com/package/swarm-cli)
-[![npm downloads](https://img.shields.io/npm/dm/swarm-cli.svg)](https://www.npmjs.com/package/swarm-cli)
-[![CI](https://github.com/scoobydrew83/swarm-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/scoobydrew83/swarm-cli/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/swarmhq.svg)](https://www.npmjs.com/package/swarmhq)
+[![npm downloads](https://img.shields.io/npm/dm/swarmhq.svg)](https://www.npmjs.com/package/swarmhq)
+[![CI](https://github.com/scoobydrew83/swarmhq/actions/workflows/ci.yml/badge.svg)](https://github.com/scoobydrew83/swarmhq/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A Docker Swarm management CLI with an embedded, locally-hosted dashboard.
 
 ```bash
-npx swarm-cli ui
+npx swarmhq ui
 ```
 
 ---
@@ -29,7 +29,7 @@ npx swarm-cli ui
 ## Installation
 
 ```bash
-npm install -g swarm-cli
+npm install -g swarmhq
 ```
 
 Requires Node.js >= 20.
@@ -41,26 +41,26 @@ Requires Node.js >= 20.
 ### 1. Initialize configuration
 
 ```bash
-swarm-cli config init --cluster-name my-cluster --vip 10.0.0.100
+swarmhq config init --cluster-name my-cluster --vip 10.0.0.100
 ```
 
 Or use the interactive wizard:
 
 ```bash
-swarm-cli config wizard
+swarmhq config wizard
 ```
 
 ### 2. Check cluster health
 
 ```bash
-swarm-cli health
-swarm-cli health --detailed
+swarmhq health
+swarmhq health --detailed
 ```
 
 ### 3. Open the dashboard
 
 ```bash
-swarm-cli ui
+swarmhq ui
 ```
 
 The dashboard opens in your browser at `http://127.0.0.1:<port>?token=<session-token>`.
@@ -72,54 +72,54 @@ The dashboard opens in your browser at `http://127.0.0.1:<port>?token=<session-t
 ### Observability
 
 ```bash
-swarm-cli health                     # Cluster health summary
-swarm-cli health --detailed          # Full health report
-swarm-cli health --json              # Machine-readable output
+swarmhq health                     # Cluster health summary
+swarmhq health --detailed          # Full health report
+swarmhq health --json              # Machine-readable output
 ```
 
 ### Operations
 
 ```bash
-swarm-cli nodes                      # List swarm nodes
-swarm-cli services                   # List services
-swarm-cli service --name <svc>       # Inspect a service
-swarm-cli service tasks --name <svc> # Show task placement
-swarm-cli leader                     # Leader status
-swarm-cli ps                         # Task placements per node
+swarmhq nodes                      # List swarm nodes
+swarmhq services                   # List services
+swarmhq service --name <svc>       # Inspect a service
+swarmhq service tasks --name <svc> # Show task placement
+swarmhq leader                     # Leader status
+swarmhq ps                         # Task placements per node
 ```
 
 ### Maintenance
 
 ```bash
-swarm-cli leader switch --target <node>  # Switch swarm leader
-swarm-cli reboot node --target <node>    # Safe drain → reboot → restore
-swarm-cli update check                   # Scan for OS/Docker updates
-swarm-cli update node --target <node>    # Apply updates to one node
-swarm-cli update all                     # Update all nodes
-swarm-cli update service --name <svc>    # Update service image
+swarmhq leader switch --target <node>  # Switch swarm leader
+swarmhq reboot node --target <node>    # Safe drain → reboot → restore
+swarmhq update check                   # Scan for OS/Docker updates
+swarmhq update node --target <node>    # Apply updates to one node
+swarmhq update all                     # Update all nodes
+swarmhq update service --name <svc>    # Update service image
 ```
 
 ### Security
 
 ```bash
-swarm-cli redact --source config     # Preview config redaction
-swarm-cli redact --source env        # Preview env redaction
+swarmhq redact --source config     # Preview config redaction
+swarmhq redact --source env        # Preview env redaction
 ```
 
 ### Configuration
 
 ```bash
-swarm-cli config show                # Display current config
-swarm-cli config path                # Resolved config file path
-swarm-cli config init                # Create example config
-swarm-cli config wizard              # Interactive setup
+swarmhq config show                # Display current config
+swarmhq config path                # Resolved config file path
+swarmhq config init                # Create example config
+swarmhq config wizard              # Interactive setup
 ```
 
 ---
 
 ## Configuration
 
-**Config file**: `~/.config/swarm-cli/config.json`
+**Config file**: `~/.config/swarmhq/config.json`
 
 ```json
 {
@@ -140,7 +140,7 @@ swarm-cli config wizard              # Interactive setup
 }
 ```
 
-**Secrets file**: `~/.config/swarm-cli/.env`
+**Secrets file**: `~/.config/swarmhq/.env`
 
 ```bash
 SWARM_VRRP_PASSWORD=your-keepalived-password
@@ -156,17 +156,17 @@ Secrets are **never** stored in `config.json`.
 | `SWARM_CONFIG_FILE` | Override config file location |
 | `SWARM_VRRP_PASSWORD` | Keepalived VRRP authentication password |
 | `SWARM_TAILSCALE_AUTHKEY` | Optional Tailscale automation key |
-| `SWARM_UI_OPEN` | Set to `false` to skip auto-opening browser on `swarm-cli ui` |
+| `SWARM_UI_OPEN` | Set to `false` to skip auto-opening browser on `swarmhq ui` |
 
 ---
 
 ## Dashboard
 
 ```bash
-swarm-cli ui
+swarmhq ui
 # Opens: http://127.0.0.1:PORT?token=SESSION_TOKEN
 
-swarm-cli ui --no-open   # Start server without opening browser
+swarmhq ui --no-open   # Start server without opening browser
 ```
 
 The dashboard provides:
@@ -184,8 +184,8 @@ The UI server binds to `127.0.0.1` only and requires a per-session token for eve
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full setup guide.
 
 ```bash
-git clone https://github.com/scoobydrew83/swarm-cli.git
-cd swarm-cli
+git clone https://github.com/scoobydrew83/swarmhq.git
+cd swarmhq
 npm install
 npm run build
 npm test

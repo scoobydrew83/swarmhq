@@ -8,7 +8,7 @@ const sourceDir = path.resolve(__dirname, "../../ui/out");
 const targetDir = path.resolve(__dirname, "../ui-dist");
 
 if (!fs.existsSync(sourceDir)) {
-  console.warn(`UI export not found at ${sourceDir}. Run "npm run build -w @swarm-cli/ui" first.`);
+  console.warn(`UI export not found at ${sourceDir}. Run "npm run build -w @swarmhq/ui" first.`);
   process.exit(0);
 }
 

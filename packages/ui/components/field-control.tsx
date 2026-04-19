@@ -1,4 +1,4 @@
-import type { CommandOptionDefinition, PicklistDefinition } from "@swarm-cli/core";
+import type { CommandOptionDefinition, PicklistDefinition } from "@swarmhq/core";
 
 interface FieldControlProps {
   option: CommandOptionDefinition;
