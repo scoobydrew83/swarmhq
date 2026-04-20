@@ -9,6 +9,7 @@ import { runServiceCommand } from "./commands/service.js";
 import { runServicesCommand } from "./commands/services.js";
 import { runUiCommand } from "./commands/ui.js";
 import { runUpdateCommand } from "./commands/update.js";
+import { runUpgradeCommand } from "./commands/upgrade.js";
 
 declare const __VERSION__: string;
 const VERSION = __VERSION__;
@@ -31,6 +32,7 @@ Commands:
   ps       List swarm task placements
   redact   Preview redaction behavior through the CLI
   ui       Start the localhost dashboard
+  upgrade  Check for and install swarmhq CLI updates
 
 Examples:
   swarmhq config init
@@ -92,6 +94,9 @@ async function main(): Promise<void> {
       return;
     case "ui":
       await runUiCommand(args);
+      return;
+    case "upgrade":
+      await runUpgradeCommand(args);
       return;
     default:
       throw new Error(`Unknown command: ${command}`);
