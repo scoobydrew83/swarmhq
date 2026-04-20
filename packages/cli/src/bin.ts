@@ -10,7 +10,8 @@ import { runServicesCommand } from "./commands/services.js";
 import { runUiCommand } from "./commands/ui.js";
 import { runUpdateCommand } from "./commands/update.js";
 
-const VERSION = "0.1.0";
+declare const __VERSION__: string;
+const VERSION = __VERSION__;
 
 function showHelp(): void {
   console.log(`swarmhq ${VERSION}
