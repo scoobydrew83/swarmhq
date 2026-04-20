@@ -160,6 +160,7 @@ export default function Page() {
           if (!cancelled) setServices(s.services ?? []);
         }
 
+
         if (!metaRes.ok) throw new Error("Failed to load command metadata.");
         if (!activityRes.ok) throw new Error("Failed to load activity log.");
 
