@@ -38,11 +38,11 @@ function getMimeType(filePath: string): string {
   return "text/plain; charset=utf-8";
 }
 
-function getUiBuildDir(): string | null {
+export function getUiBuildDir(baseDir: string = __dirname): string | null {
   const candidates = [
     process.env.SWARM_UI_DIST,
-    path.resolve(__dirname, "../../ui-dist"),
-    path.resolve(__dirname, "../../../ui/out"),
+    path.resolve(baseDir, "../ui-dist"),
+    path.resolve(baseDir, "../../ui/out"),
   ].filter(Boolean) as string[];
 
   for (const candidate of candidates) {
