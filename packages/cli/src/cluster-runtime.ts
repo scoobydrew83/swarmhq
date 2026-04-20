@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import net from "node:net";
 import { promisify } from "node:util";
 import {
+  ConnectivityError,
   loadConfig,
   loadRuntimeSecrets,
   type HostKeyCheckingMode,
@@ -186,12 +187,12 @@ async function execSsh(context: RuntimeContext, node: SwarmNode, command: string
       lastError = extractExecError(error) || lastError;
 
       if (!/permission denied|publickey|authentication failed|too many authentication failures/i.test(lastError)) {
-        throw new Error(lastError);
+        throw new ConnectivityError(lastError);
       }
     }
   }
 
-  throw new Error(lastError);
+  throw new ConnectivityError(lastError);
 }
 
 async function tryExecSsh(context: RuntimeContext, node: SwarmNode, command: string): Promise<string | null> {
@@ -308,7 +309,10 @@ async function resolveLeader(context: RuntimeContext): Promise<LeaderDetails> {
     };
   }
 
-  throw new Error("No swarm leader found through the configured nodes.");
+  throw new ConnectivityError(
+    "No swarm leader found through the configured nodes. " +
+      "Ensure at least one manager node is reachable via SSH.",
+  );
 }
 
 async function findVipHolder(context: RuntimeContext): Promise<SwarmNode | null> {
@@ -1001,7 +1005,26 @@ export async function switchClusterLeader(options: {
   swarmOnly?: boolean;
   strictTarget?: boolean;
   confirm?: boolean;
+  dryRun?: boolean;
 }): Promise<string> {
+  if (options.dryRun) {
+    const steps = [`[dry-run] Would switch cluster leader to: ${options.target}`];
+    if (!options.swarmOnly) {
+      steps.push("  - Update keepalived config on all nodes to prioritize target");
+      steps.push("  - Restart keepalived to trigger VIP migration");
+    }
+    if (!options.vipOnly) {
+      if (options.strictTarget) {
+        steps.push("  - Temporarily demote all other managers to force target as leader");
+        steps.push("  - Re-promote demoted managers after leadership transfers");
+      } else {
+        steps.push("  - Demote current leader to trigger new election");
+        steps.push("  - Re-promote previous leader after election completes");
+      }
+    }
+    return steps.join("\n");
+  }
+
   if (!options.confirm) {
     throw new Error("Leader switch requires explicit confirmation.");
   }
@@ -1146,7 +1169,28 @@ export async function rebootClusterNode(options: {
   force?: boolean;
   noRestore?: boolean;
   confirm?: boolean;
+  dryRun?: boolean;
 }): Promise<string> {
+  if (options.dryRun) {
+    const drainWait = options.drainWait ?? 30;
+    const bootWait = options.bootWait ?? 300;
+    const steps = [`[dry-run] Would reboot node: ${options.target}`];
+    if (!options.force) {
+      steps.push(`  1. Drain node (wait ${drainWait}s for tasks to migrate)`);
+    } else {
+      steps.push("  1. Skip drain (--force)");
+    }
+    steps.push("  2. Send reboot command via SSH");
+    steps.push(`  3. Wait up to ${bootWait}s for node to come back online`);
+    steps.push("  4. Wait for Docker to become active");
+    if (!options.noRestore) {
+      steps.push("  5. Restore node to active availability");
+    } else {
+      steps.push("  5. Skip restore (--no-restore)");
+    }
+    return steps.join("\n");
+  }
+
   if (!options.confirm) {
     throw new Error("Node reboot requires explicit confirmation.");
   }
@@ -1406,7 +1450,25 @@ export async function updateClusterNode(options: {
   mode?: NodeUpdateMode;
   skipReboot?: boolean;
   confirm?: boolean;
+  dryRun?: boolean;
 }): Promise<string> {
+  if (options.dryRun) {
+    const mode = options.mode ?? "all";
+    const steps = [`[dry-run] Would update node: ${options.target}`, `  Mode: ${mode}`];
+    if (mode === "all" || mode === "os") {
+      steps.push("  - Run OS package updates (apt-get upgrade)");
+    }
+    if (mode === "all" || mode === "docker") {
+      steps.push("  - Run Docker package update and restart docker service");
+    }
+    if (!options.skipReboot) {
+      steps.push("  - Reboot node if required after update");
+    } else {
+      steps.push("  - Skip reboot even if required (--skip-reboot)");
+    }
+    return steps.join("\n");
+  }
+
   if (!options.confirm) {
     throw new Error("Node update requires explicit confirmation.");
   }
@@ -1455,7 +1517,30 @@ export async function updateAllClusterNodes(options: {
   skipReboot?: boolean;
   confirm?: boolean;
   exclude?: string[];
+  dryRun?: boolean;
 }): Promise<string> {
+  if (options.dryRun) {
+    const mode = options.mode ?? "all";
+    const excludeList = (options.exclude ?? []).filter(Boolean);
+    const steps = ["[dry-run] Would update all cluster nodes sequentially"];
+    steps.push(`  Mode: ${mode}`);
+    if (excludeList.length) {
+      steps.push(`  Excluded: ${excludeList.join(", ")}`);
+    }
+    if (mode === "all" || mode === "os") {
+      steps.push("  - Run OS package updates on each node");
+    }
+    if (mode === "all" || mode === "docker") {
+      steps.push("  - Run Docker update on each node");
+    }
+    if (!options.skipReboot) {
+      steps.push("  - Reboot each node if required (draining before, restoring after)");
+    } else {
+      steps.push("  - Skip reboots even if required (--skip-reboot)");
+    }
+    return steps.join("\n");
+  }
+
   if (!options.confirm) {
     throw new Error("Bulk node update requires explicit confirmation.");
   }
