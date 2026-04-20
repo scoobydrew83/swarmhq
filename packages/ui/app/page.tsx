@@ -10,6 +10,7 @@ import type {
 } from "@swarmhq/core";
 import { ActivityFeed } from "../components/activity-feed";
 import { CommandCenter, SidebarNav } from "../components/command-center";
+import { CompletionsPanel } from "../components/completions-panel";
 import { NodeRoster } from "../components/node-roster";
 import { OutputModal } from "../components/output-modal";
 import { ResultViewer } from "../components/result-viewer";
@@ -39,6 +40,10 @@ type CommandResponsePayload = {
   result?: CommandExecutionResult;
   error?: string;
 };
+
+type VersionPayload = { version: string };
+type UpgradeCheckPayload = { current: string; latest: string; updateAvailable: boolean };
+type UpgradeApplyPayload = { upgraded: boolean; version?: string; message: string };
 
 type ActivityStreamPayload =
   | { type: "snapshot"; activities: ActivityEntry[] }
@@ -98,8 +103,12 @@ export default function Page() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [commandError, setCommandError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [rightTab, setRightTab] = useState<"activity" | "output">("activity");
+  const [rightTab, setRightTab] = useState<"activity" | "output" | "completions">("activity");
   const [outputModal, setOutputModal] = useState(false);
+  const [version, setVersion] = useState<string | null>(null);
+  const [upgradeCheck, setUpgradeCheck] = useState<UpgradeCheckPayload | null>(null);
+  const [upgradeStatus, setUpgradeStatus] = useState<"idle" | "checking" | "upgrading" | "done" | "error">("idle");
+  const [upgradeMessage, setUpgradeMessage] = useState<string | null>(null);
 
   // ── Initial data load ──────────────────────────────────────────────
   useEffect(() => {
@@ -115,12 +124,18 @@ export default function Page() {
         setSession(nextSession);
 
         const headers = buildHeaders(nextSession.token);
-        const [metaRes, configRes, healthRes, activityRes] = await Promise.all([
+        const [metaRes, configRes, healthRes, activityRes, versionRes] = await Promise.all([
           fetch("/api/meta", { headers }),
           fetch("/api/config", { headers }),
           fetch("/api/health", { headers }),
           fetch("/api/activity", { headers }),
+          fetch("/api/version", { headers }),
         ]);
+
+        if (versionRes.ok) {
+          const v = (await versionRes.json()) as VersionPayload;
+          if (!cancelled) setVersion(v.version);
+        }
 
         if (!metaRes.ok) throw new Error("Failed to load command metadata.");
         if (!activityRes.ok) throw new Error("Failed to load activity log.");
@@ -232,6 +247,48 @@ export default function Page() {
     if (aRes.ok) { const a = (await aRes.json()) as ActivityPayload; setActivities(a.activities); }
   }
 
+  async function checkUpgrade() {
+    if (!session) return;
+    setUpgradeStatus("checking");
+    setUpgradeMessage(null);
+    try {
+      const res = await fetch("/api/upgrade/check", { headers: buildHeaders(session.token) });
+      const payload = (await res.json()) as UpgradeCheckPayload;
+      setUpgradeCheck(payload);
+      setUpgradeStatus("idle");
+    } catch {
+      setUpgradeStatus("error");
+      setUpgradeMessage("Could not reach npm registry.");
+    }
+  }
+
+  async function applyUpgrade() {
+    if (!session) return;
+    setUpgradeStatus("upgrading");
+    setUpgradeMessage(null);
+    try {
+      const res = await fetch("/api/upgrade/apply", {
+        method: "POST",
+        headers: buildHeaders(session.token),
+      });
+      const payload = (await res.json()) as UpgradeApplyPayload | { error: string };
+      if (!res.ok) {
+        setUpgradeStatus("error");
+        setUpgradeMessage("error" in payload ? payload.error : "Upgrade failed.");
+      } else {
+        const p = payload as UpgradeApplyPayload;
+        setUpgradeStatus("done");
+        setUpgradeMessage(p.message);
+        if (p.upgraded && p.version) {
+          setUpgradeCheck((prev) => prev ? { ...prev, updateAvailable: false, current: p.version! } : prev);
+        }
+      }
+    } catch {
+      setUpgradeStatus("error");
+      setUpgradeMessage("Upgrade request failed.");
+    }
+  }
+
   async function runCommand() {
     if (!session || !selectedCommandId) return;
     try {
@@ -298,6 +355,42 @@ export default function Page() {
         </div>
 
         <div className="top-nav-right">
+          {version ? (
+            <span
+              className={`nav-chip${upgradeCheck?.updateAvailable ? " warning" : ""}`}
+              style={{ cursor: "default", userSelect: "none" }}
+              title={upgradeCheck?.updateAvailable ? `v${upgradeCheck.latest} available` : undefined}
+            >
+              v{version}
+            </span>
+          ) : null}
+          {upgradeCheck?.updateAvailable && upgradeStatus === "idle" ? (
+            <button
+              type="button"
+              className="icon-btn"
+              title={`Update to v${upgradeCheck.latest}`}
+              onClick={() => void applyUpgrade()}
+            >
+              <span className="ms">system_update_alt</span>
+            </button>
+          ) : upgradeStatus === "upgrading" ? (
+            <span className="nav-chip" style={{ cursor: "default" }}>Upgrading…</span>
+          ) : upgradeStatus === "done" ? (
+            <span className="nav-chip healthy" style={{ cursor: "default" }} title={upgradeMessage ?? undefined}>Restart needed</span>
+          ) : upgradeStatus === "error" ? (
+            <span className="nav-chip danger" style={{ cursor: "default" }} title={upgradeMessage ?? undefined}>Update failed</span>
+          ) : upgradeStatus === "checking" ? (
+            <span className="nav-chip" style={{ cursor: "default" }}>Checking…</span>
+          ) : version ? (
+            <button
+              type="button"
+              className="icon-btn"
+              title="Check for updates"
+              onClick={() => void checkUpgrade()}
+            >
+              <span className="ms">update</span>
+            </button>
+          ) : null}
           <ThemeToggle />
           <a className="icon-btn" href="/setup" title="Setup Wizard">
             <span className="ms">settings</span>
@@ -412,10 +505,20 @@ export default function Page() {
                   Output
                   {hasOutput && rightTab !== "output" ? <span className="tab-dot" /> : null}
                 </button>
+                <button
+                  type="button"
+                  className={`pane-tab${rightTab === "completions" ? " active" : ""}`}
+                  onClick={() => setRightTab("completions")}
+                >
+                  <span className="ms" style={{ fontSize: "0.875rem" }}>code</span>
+                  Completions
+                </button>
               </div>
 
               {rightTab === "activity" ? (
                 <ActivityFeed activities={activities} />
+              ) : rightTab === "completions" ? (
+                <CompletionsPanel token={session?.token ?? ""} />
               ) : (
                 <div className="tab-output-pane">
                   <div className="output-body" style={{ flex: 1, overflow: "auto", padding: "14px" }}>

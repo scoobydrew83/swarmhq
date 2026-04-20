@@ -92,12 +92,16 @@ swarmhq ps                         # Task placements per node
 ### Maintenance
 
 ```bash
-swarmhq leader switch --target <node>  # Switch swarm leader
-swarmhq reboot node --target <node>    # Safe drain → reboot → restore
-swarmhq update check                   # Scan for OS/Docker updates
-swarmhq update node --target <node>    # Apply updates to one node
-swarmhq update all                     # Update all nodes
-swarmhq update service --name <svc>    # Update service image
+swarmhq leader switch --target <node>           # Switch swarm leader
+swarmhq leader switch --target <node> --dry-run # Preview plan without executing
+swarmhq reboot node --target <node>             # Safe drain → reboot → restore
+swarmhq reboot node --target <node> --dry-run   # Preview reboot plan
+swarmhq update check                            # Scan for OS/Docker updates
+swarmhq update node --target <node>             # Apply updates to one node
+swarmhq update node --target <node> --dry-run   # Preview update plan
+swarmhq update all                              # Update all nodes
+swarmhq update all --dry-run                    # Preview full update plan
+swarmhq update service --name <svc>             # Update service image
 ```
 
 ### Security
@@ -114,6 +118,17 @@ swarmhq config show                # Display current config
 swarmhq config path                # Resolved config file path
 swarmhq config init                # Create example config
 swarmhq config wizard              # Interactive setup
+```
+
+### General
+
+```bash
+swarmhq version                    # Print current version
+swarmhq upgrade                    # Self-update to the latest version via npm
+swarmhq help <command>             # Show flags, subcommands, and examples
+swarmhq completions bash           # Generate bash completion script
+swarmhq completions zsh            # Generate zsh completion script
+swarmhq completions fish           # Generate fish completion script
 ```
 
 ---

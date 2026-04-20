@@ -15,8 +15,12 @@ import {
   type ActivityEntry,
   type CommandExecutionRequest,
 } from "@swarmhq/core";
+import { BASH_COMPLETION, FISH_COMPLETION, ZSH_COMPLETION } from "../commands/completions.js";
+import { applyUpdate, checkForUpdate } from "../commands/upgrade.js";
 import { buildCliInvocation, runCliRequest } from "../command-bridge.js";
 import { buildRemoteHealthReport } from "../cluster-runtime.js";
+
+declare const __VERSION__: string;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -286,6 +290,51 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
 
       if (url.pathname === "/api/events") {
         attachActivityStream(req, res);
+        return;
+      }
+
+      if (url.pathname === "/api/version") {
+        sendJson(res, 200, { version: __VERSION__ });
+        return;
+      }
+
+      if (url.pathname === "/api/completions") {
+        sendJson(res, 200, { bash: BASH_COMPLETION, zsh: ZSH_COMPLETION, fish: FISH_COMPLETION });
+        return;
+      }
+
+      if (url.pathname === "/api/upgrade/check") {
+        void (async () => {
+          try {
+            const info = await checkForUpdate();
+            sendJson(res, 200, info);
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to check for updates";
+            sendJson(res, 500, { error: message });
+          }
+        })();
+        return;
+      }
+
+      if (url.pathname === "/api/upgrade/apply" && req.method === "POST") {
+        void (async () => {
+          try {
+            const info = await checkForUpdate();
+            if (!info.updateAvailable) {
+              sendJson(res, 200, { upgraded: false, message: "Already on the latest version." });
+              return;
+            }
+            applyUpdate(info.latest);
+            sendJson(res, 200, {
+              upgraded: true,
+              version: info.latest,
+              message: `Upgraded to v${info.latest}. Restart swarmhq ui to use the new version.`,
+            });
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Upgrade failed";
+            sendJson(res, 500, { error: message });
+          }
+        })();
         return;
       }
 

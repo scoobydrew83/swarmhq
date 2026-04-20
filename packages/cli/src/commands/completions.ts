@@ -10,6 +10,7 @@ const COMMANDS = [
   "ps",
   "redact",
   "ui",
+  "upgrade",
   "completions",
   "help",
   "version",
@@ -36,6 +37,7 @@ const FLAGS: Record<string, string[]> = {
   ps: ["--config", "--context", "--all", "--json"],
   redact: ["--config", "--source", "--hide-ips", "--stdin"],
   ui: ["--no-open"],
+  upgrade: ["--check", "--yes"],
 };
 
 function bashCompletion(): string {
@@ -168,6 +170,10 @@ ${subcommandCompletions}
 
 ${flagCompletions}`;
 }
+
+export const BASH_COMPLETION = bashCompletion();
+export const ZSH_COMPLETION = zshCompletion();
+export const FISH_COMPLETION = fishCompletion();
 
 export function runCompletionsCommand(args: string[]): void {
   const shell = args[0]?.trim() ?? "";

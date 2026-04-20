@@ -25,10 +25,10 @@ describe("redactText", () => {
   });
 
   it('redacts JSON "vrrpPassword" field value', () => {
-    const input = '{"vrrpPassword": "myvrrppass"}';
+    const input = '{"vrrpPassword": "example-test-value"}';
     const result = redactText(input);
     expect(result).toContain("[REDACTED]");
-    expect(result).not.toContain("myvrrppass");
+    expect(result).not.toContain("example-test-value");
   });
 
   it('redacts JSON "tailscaleAuthKey" field value', () => {

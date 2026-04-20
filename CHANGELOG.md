@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-20
+
+### Added
+- `swarmhq upgrade` command — self-updates the CLI to the latest version via npm, replacing the need to manually run `npm install -g swarmhq`
+- `swarmhq completions <shell>` command — generates shell completion scripts for bash, zsh, and fish
+- `swarmhq version` command — prints the current version matching `package.json`
+- `swarmhq help <command>` command — displays per-command flags, subcommands, and examples
+- `--dry-run` flag for `reboot node`, `update node`, `update all`, and `leader switch` — prints the execution plan without making changes
+- Typed error classes with specific exit codes: `ConfigError` exits with code 2, `ConnectivityError` exits with code 3
+- Config validation with node-level checks (id, host, username, roles), SSH port range enforcement, and descriptive error messages
+
+### Changed
+- CI: upgraded `actions/checkout` from v4 to v6
+
+### Fixed
+- `VERSION` is now injected from `package.json` at build time — previously it was hardcoded and could drift from the published package version
+- Expanded test suite to 91 tests across 8 files — added coverage for `docker-runtime`, `command-bridge`, `redact`, config validation, and error propagation
+
 ## [0.1.4] - 2026-04-19
 
 ### Fixed
