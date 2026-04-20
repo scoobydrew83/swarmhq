@@ -299,6 +299,24 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       }
       return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
+    case "maintenance.node-promote": {
+      const args = ["nodes", "promote"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--target", readString(values, "nodeId"));
+      if (readBoolean(values, "confirm")) {
+        args.push("--yes");
+      }
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "maintenance.node-demote": {
+      const args = ["nodes", "demote"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--target", readString(values, "nodeId"));
+      if (readBoolean(values, "confirm")) {
+        args.push("--yes");
+      }
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
     default:
       throw new Error(`No CLI bridge is defined for command ${request.commandId}`);
   }

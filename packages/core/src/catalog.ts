@@ -147,6 +147,16 @@ export const COMMAND_CATALOG: CommandCatalog = {
         },
       ],
     },
+    {
+      id: "cluster-nodes",
+      label: "Cluster Nodes",
+      options: [],
+    },
+    {
+      id: "cluster-services",
+      label: "Cluster Services",
+      options: [],
+    },
   ],
   commands: [
     {
@@ -671,9 +681,9 @@ export const COMMAND_CATALOG: CommandCatalog = {
         {
           id: "target",
           label: "Target Node",
-          description: "Node hostname or IP to update.",
-          kind: "text",
-          placeholder: "docker1",
+          description: "Node to update.",
+          kind: "picklist",
+          picklistId: "cluster-nodes",
           required: true,
         },
         {
@@ -797,9 +807,9 @@ export const COMMAND_CATALOG: CommandCatalog = {
         {
           id: "serviceName",
           label: "Service Name",
-          description: "Required swarm service name to update.",
-          kind: "text",
-          placeholder: "caddy_caddy",
+          description: "Required swarm service to update.",
+          kind: "picklist",
+          picklistId: "cluster-services",
           required: true,
         },
         {
@@ -859,6 +869,66 @@ export const COMMAND_CATALOG: CommandCatalog = {
           id: "confirm",
           label: "Confirm Destructive Action",
           description: "Required before a maintenance command will run.",
+          kind: "checkbox",
+          defaultValue: false,
+        },
+      ],
+    },
+    {
+      id: "maintenance.node-promote",
+      label: "Promote Node to Manager",
+      summary: "Promote a worker node to swarm manager role.",
+      groupId: "maintenance",
+      options: [
+        {
+          id: "configPath",
+          label: "Config Path",
+          description: "Optional override for the active config file.",
+          kind: "text",
+          placeholder: "/absolute/path/to/config.json",
+        },
+        {
+          id: "nodeId",
+          label: "Node",
+          description: "Node to promote to manager.",
+          kind: "picklist",
+          picklistId: "cluster-nodes",
+          required: true,
+        },
+        {
+          id: "confirm",
+          label: "Confirm",
+          description: "Required before the promotion will run.",
+          kind: "checkbox",
+          defaultValue: false,
+        },
+      ],
+    },
+    {
+      id: "maintenance.node-demote",
+      label: "Demote Manager to Worker",
+      summary: "Demote a manager node to worker role. Ensure quorum is maintained.",
+      groupId: "maintenance",
+      options: [
+        {
+          id: "configPath",
+          label: "Config Path",
+          description: "Optional override for the active config file.",
+          kind: "text",
+          placeholder: "/absolute/path/to/config.json",
+        },
+        {
+          id: "nodeId",
+          label: "Node",
+          description: "Manager node to demote to worker.",
+          kind: "picklist",
+          picklistId: "cluster-nodes",
+          required: true,
+        },
+        {
+          id: "confirm",
+          label: "Confirm",
+          description: "Required before the demotion will run.",
           kind: "checkbox",
           defaultValue: false,
         },

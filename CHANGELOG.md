@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-20
+
+### Added
+- `swarmhq nodes promote` / `swarmhq nodes demote` subcommands — promote a worker to manager or demote a manager to worker; also available in the dashboard under Maintenance
+- `/api/services` endpoint — serves live service names and images to the UI for dynamic picklists
+- Dynamic picklists in the command center — the "Target Node" and "Service Name" selectors are now dropdowns populated from live cluster data instead of free-text inputs
+
+### Changed
+- Service image scan (`update services`) output now includes a TAG column and uses "UPDATE AVAILABLE / up to date" status; appends a count summary (e.g. "2/5 service(s) have updates available.")
+- Node update scan (`update nodes`) output now appends a count summary (e.g. "1/3 node(s) have pending updates.")
+- Node role detection during update scans now reads directly from config instead of making an extra SSH call per node
+- Removed `keepalived.authPassEnv` config field — VRRP password is now always read from `SWARM_VRRP_PASSWORD` in the env file, eliminating a layer of indirection
+
+### Fixed
+- VRRP password lookup now uses a direct env var reference (`SWARM_VRRP_PASSWORD`) rather than routing through the config's `authPassEnv` field — removes a potential misconfiguration footgun
+- Replaced deprecated `toThrowError` calls with `toThrow` in config validation tests
+
 ## [0.2.0] - 2026-04-20
 
 ### Added

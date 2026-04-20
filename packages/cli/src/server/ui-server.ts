@@ -18,7 +18,7 @@ import {
 import { BASH_COMPLETION, FISH_COMPLETION, ZSH_COMPLETION } from "../commands/completions.js";
 import { applyUpdate, checkForUpdate } from "../commands/upgrade.js";
 import { buildCliInvocation, runCliRequest } from "../command-bridge.js";
-import { buildRemoteHealthReport } from "../cluster-runtime.js";
+import { buildRemoteHealthReport, listClusterServiceNames } from "../cluster-runtime.js";
 
 declare const __VERSION__: string;
 
@@ -241,6 +241,18 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
           return;
         }
         sendJson(res, 200, { config: current.config, configPath: current.path });
+        return;
+      }
+
+      if (url.pathname === "/api/services") {
+        void (async () => {
+          try {
+            const services = await listClusterServiceNames({ configPath: options.configPath });
+            sendJson(res, 200, { services });
+          } catch {
+            sendJson(res, 200, { services: [] });
+          }
+        })();
         return;
       }
 

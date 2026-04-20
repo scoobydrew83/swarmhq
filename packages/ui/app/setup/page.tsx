@@ -315,16 +315,6 @@ export default function SetupPage() {
                   </div>
                 </div>
 
-                <div className="field-group">
-                  <label className="field-label" htmlFor="kvAuthEnv">Auth Password Env Var</label>
-                  <input
-                    id="kvAuthEnv"
-                    className="field-input"
-                    value={input.keepalivedAuthPassEnv}
-                    onChange={(e) => setInput({ ...input, keepalivedAuthPassEnv: e.target.value })}
-                  />
-                  <span className="field-hint">The config stores the env var name; the secret value goes into the env file.</span>
-                </div>
               </div>
 
               {/* ── SECRETS ────────────────────────────────────────── */}

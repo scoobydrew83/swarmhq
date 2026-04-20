@@ -30,10 +30,9 @@ export const DEFAULT_CONFIG: SwarmConfig = {
   keepalived: {
     enabled: true,
     interface: "eth0",
-    routerId: "SWARMCLI",
+    routerId: "SWARMHQ",
     virtualRouterId: 51,
     advertisementInterval: 1,
-    authPassEnv: "SWARM_VRRP_PASSWORD",
   },
   ssh: {
     port: 22,
@@ -196,13 +195,7 @@ export function validateConfig(config: SwarmConfig): void {
   }
 
   if (!config.keepalived.routerId?.trim()) {
-    throw new ConfigError("'keepalived.routerId' is required (e.g. \"SWARMCLI\").");
-  }
-
-  if (!config.keepalived.authPassEnv?.trim()) {
-    throw new ConfigError(
-      "'keepalived.authPassEnv' is required. Set the env var name holding the VRRP password (e.g. \"SWARM_VRRP_PASSWORD\").",
-    );
+    throw new ConfigError("'keepalived.routerId' is required (e.g. \"SWARMHQ\").");
   }
 
   if (config.keepalived.virtualRouterId < 1 || config.keepalived.virtualRouterId > 255) {
@@ -287,7 +280,6 @@ export function createConfigBuilderDefaults(
       keepalivedRouterId: config.keepalived.routerId,
       keepalivedVirtualRouterId: config.keepalived.virtualRouterId,
       keepalivedAdvertisementInterval: config.keepalived.advertisementInterval,
-      keepalivedAuthPassEnv: config.keepalived.authPassEnv,
       sshPort: config.ssh.port,
       sshMode: config.ssh.strictHostKeyChecking,
       hideIps: config.redaction.hideIps,
@@ -323,7 +315,6 @@ export function buildConfigFromBuilderInput(input: ConfigBuilderInput): SwarmCon
       routerId: input.keepalivedRouterId.trim(),
       virtualRouterId: input.keepalivedVirtualRouterId,
       advertisementInterval: input.keepalivedAdvertisementInterval,
-      authPassEnv: input.keepalivedAuthPassEnv.trim(),
     },
     ssh: {
       port: input.sshPort,
@@ -359,8 +350,8 @@ export function saveConfigBuilderInput(
 
   const savedSecretKeys: string[] = [];
   if (input.vrrpPassword?.trim()) {
-    envEntries[config.keepalived.authPassEnv] = input.vrrpPassword.trim();
-    savedSecretKeys.push(config.keepalived.authPassEnv);
+    envEntries.SWARM_VRRP_PASSWORD = input.vrrpPassword.trim();
+    savedSecretKeys.push("SWARM_VRRP_PASSWORD");
   }
 
   if (input.tailscaleAuthKey?.trim()) {
