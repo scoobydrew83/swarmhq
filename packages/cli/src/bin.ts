@@ -1,7 +1,8 @@
-import { ConfigError, ConnectivityError } from "@swarmhq/core";
+import { SwarmHQError } from "@swarmhq/core";
 import { runCompletionsCommand } from "./commands/completions.js";
 import { runConfigCommand } from "./commands/config.js";
 import { runHealthCommand } from "./commands/health.js";
+import { runHelpCommand } from "./commands/help.js";
 import { runLeaderCommand } from "./commands/leader.js";
 import { runNodesCommand } from "./commands/nodes.js";
 import { runPsCommand } from "./commands/ps.js";
@@ -36,18 +37,26 @@ Commands:
   ui           Start the localhost dashboard
   upgrade      Check for and install swarmhq CLI updates
   completions  Generate shell completion script (bash, zsh, fish)
+  help         Show per-command help with flag descriptions
+  version      Print the CLI version
 
 Examples:
   swarmhq config init
   swarmhq health --json
   swarmhq health --detailed
-  swarmhq health --config ~/.config/swarmhq/config.json
   swarmhq leader switch --target docker --yes
   swarmhq reboot list
   swarmhq update check
-  swarmhq update services --json
-  swarmhq nodes --context production
+  swarmhq update node --target manager-a --dry-run
   swarmhq ui --no-open
+  swarmhq help reboot
+  swarmhq completions bash >> ~/.bashrc
+
+Exit codes:
+  0  Success
+  1  General error
+  2  Config error (missing file, invalid JSON, validation failure)
+  3  Connectivity error (SSH failure, unreachable node)
 `);
 }
 
@@ -59,7 +68,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  if (command === "--version" || command === "-v") {
+  if (command === "--version" || command === "-v" || command === "version") {
     console.log(VERSION);
     return;
   }
@@ -101,21 +110,22 @@ async function main(): Promise<void> {
     case "upgrade":
       await runUpgradeCommand(args);
       return;
+    case "help":
+      runHelpCommand(args);
+      return;
     case "completions":
       runCompletionsCommand(args);
       return;
     default:
-      throw new Error(`Unknown command: ${command}`);
+      throw new Error(`Unknown command: ${command}. Run 'swarmhq --help' for usage.`);
   }
 }
 
 main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   console.error(`Error: ${message}`);
-  if (error instanceof ConfigError) {
-    process.exitCode = 2;
-  } else if (error instanceof ConnectivityError) {
-    process.exitCode = 3;
+  if (error instanceof SwarmHQError) {
+    process.exitCode = error.exitCode;
   } else {
     process.exitCode = 1;
   }

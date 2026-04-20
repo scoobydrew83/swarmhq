@@ -19,6 +19,7 @@ export async function runLeaderCommand(args: string[]): Promise<void> {
   const configPath = configIndex >= 0 ? args[configIndex + 1] : undefined;
   const target = targetIndex >= 0 ? args[targetIndex + 1] ?? "" : positionalTarget ?? "";
   const asJson = args.includes("--json");
+  const dryRun = args.includes("--dry-run");
 
   switch (subcommand) {
     case "status":
@@ -60,7 +61,8 @@ export async function runLeaderCommand(args: string[]): Promise<void> {
           vipOnly: args.includes("--vip-only"),
           swarmOnly: args.includes("--swarm-only"),
           strictTarget: args.includes("--strict-target"),
-          confirm: args.includes("--yes"),
+          confirm: args.includes("--yes") || dryRun,
+          dryRun,
         }),
       );
       return;

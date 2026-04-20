@@ -53,7 +53,8 @@ export async function runUpdateCommand(args: string[]): Promise<void> {
   const name = getFlagValue(args, "--name") ?? "";
   const asJson = args.includes("--json");
   const skipReboot = args.includes("--skip-reboot");
-  const confirm = args.includes("--yes");
+  const dryRun = args.includes("--dry-run");
+  const confirm = args.includes("--yes") || dryRun;
   const mode = getNodeUpdateMode(args);
 
   switch (subcommand) {
@@ -86,6 +87,7 @@ export async function runUpdateCommand(args: string[]): Promise<void> {
           mode,
           skipReboot,
           confirm,
+          dryRun,
         }),
       );
       return;
@@ -116,6 +118,7 @@ export async function runUpdateCommand(args: string[]): Promise<void> {
           skipReboot,
           confirm,
           exclude: getExcludeList(args),
+          dryRun,
         }),
       );
       return;
@@ -146,7 +149,7 @@ export async function runUpdateCommand(args: string[]): Promise<void> {
       return;
     default:
       console.log(
-        "swarmhq update <check|node|all|services|service|containers|container> [--config PATH] [--target NODE] [--name NAME] [--mode all|os|docker] [--os] [--docker] [--exclude NODE1,NODE2] [--skip-reboot] [--json] [--yes]",
+        "swarmhq update <check|node|all|services|service|containers|container> [--config PATH] [--target NODE] [--name NAME] [--mode all|os|docker] [--os] [--docker] [--exclude NODE1,NODE2] [--skip-reboot] [--json] [--yes] [--dry-run]",
       );
   }
 }

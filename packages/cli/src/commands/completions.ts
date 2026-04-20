@@ -1,174 +1,196 @@
-export const BASH_COMPLETION = `
+const COMMANDS = [
+  "config",
+  "health",
+  "nodes",
+  "services",
+  "service",
+  "leader",
+  "reboot",
+  "update",
+  "ps",
+  "redact",
+  "ui",
+  "upgrade",
+  "completions",
+  "help",
+  "version",
+];
+
+const SUBCOMMANDS: Record<string, string[]> = {
+  config: ["show", "path", "init", "wizard"],
+  service: ["inspect", "tasks"],
+  leader: ["status", "switch"],
+  reboot: ["list", "status", "node"],
+  update: ["check", "node", "all", "services", "service", "containers", "container"],
+  completions: ["bash", "zsh", "fish"],
+};
+
+const FLAGS: Record<string, string[]> = {
+  config: ["--config", "--env", "--json", "--cluster-name", "--vip", "--ssh-mode", "--hide-ips", "--force", "--yes"],
+  health: ["--config", "--json", "--detailed"],
+  nodes: ["--config", "--context", "--json"],
+  services: ["--config", "--context", "--json"],
+  service: ["--config", "--context", "--name", "--all", "--json"],
+  leader: ["--config", "--context", "--target", "--vip-only", "--swarm-only", "--strict-target", "--json", "--yes", "--dry-run"],
+  reboot: ["--config", "--target", "--drain-wait", "--boot-wait", "--force", "--no-restore", "--yes", "--dry-run"],
+  update: ["--config", "--target", "--name", "--mode", "--os", "--docker", "--exclude", "--skip-reboot", "--json", "--yes", "--dry-run"],
+  ps: ["--config", "--context", "--all", "--json"],
+  redact: ["--config", "--source", "--hide-ips", "--stdin"],
+  ui: ["--no-open"],
+  upgrade: ["--check", "--yes"],
+};
+
+function bashCompletion(): string {
+  const commandList = COMMANDS.join(" ");
+  const subcommandCases = Object.entries(SUBCOMMANDS)
+    .map(([cmd, subs]) => `            ${cmd}) COMPREPLY=($(compgen -W "${subs.join(" ")}" -- "$cur")) ;;`)
+    .join("\n");
+  const flagCases = Object.entries(FLAGS)
+    .map(([cmd, flags]) => `            ${cmd}) COMPREPLY=($(compgen -W "${flags.join(" ")}" -- "$cur")) ;;`)
+    .join("\n");
+
+  return `# swarmhq bash completion
+# Add to ~/.bashrc: eval "$(swarmhq completions bash)"
 _swarmhq_completions() {
-  local cur prev
-  COMPREPLY=()
-  cur="\${COMP_WORDS[COMP_CWORD]}"
-  prev="\${COMP_WORDS[COMP_CWORD-1]}"
+    local cur prev words cword
+    _init_completion 2>/dev/null || {
+        COMPREPLY=()
+        cur="\${COMP_WORDS[COMP_CWORD]}"
+        prev="\${COMP_WORDS[COMP_CWORD-1]}"
+    }
 
-  local top_commands="config health nodes services service leader ps redact reboot update ui upgrade version help completions"
+    local commands="${commandList}"
+    local cmd=""
+    local i
+    for ((i=1; i<\${#COMP_WORDS[@]}-1; i++)); do
+        if [[ "\${COMP_WORDS[i]}" != -* ]]; then
+            cmd="\${COMP_WORDS[i]}"
+            break
+        fi
+    done
 
-  case "\${COMP_WORDS[1]}" in
-    config)
-      COMPREPLY=($(compgen -W "show path init wizard" -- "\$cur"))
-      ;;
-    leader)
-      COMPREPLY=($(compgen -W "status switch" -- "\$cur"))
-      ;;
-    reboot)
-      COMPREPLY=($(compgen -W "list status node" -- "\$cur"))
-      ;;
-    update)
-      COMPREPLY=($(compgen -W "check node all services service containers container" -- "\$cur"))
-      ;;
-    completions)
-      COMPREPLY=($(compgen -W "bash zsh fish" -- "\$cur"))
-      ;;
-    *)
-      COMPREPLY=($(compgen -W "\$top_commands" -- "\$cur"))
-      ;;
-  esac
+    if [[ -z "$cmd" ]]; then
+        COMPREPLY=($(compgen -W "$commands" -- "$cur"))
+        return
+    fi
+
+    case "$cur" in
+        -*)
+            case "$cmd" in
+${flagCases}
+                *) COMPREPLY=() ;;
+            esac
+            ;;
+        *)
+            case "$cmd" in
+${subcommandCases}
+                *) COMPREPLY=($(compgen -W "$commands" -- "$cur")) ;;
+            esac
+            ;;
+    esac
 }
-complete -F _swarmhq_completions swarmhq
-`.trim();
+complete -F _swarmhq_completions swarmhq`;
+}
 
-export const ZSH_COMPLETION = `
-#compdef swarmhq
+function zshCompletion(): string {
+  const commandDefs = COMMANDS.map((cmd) => {
+    const subs = SUBCOMMANDS[cmd];
+    const flags = FLAGS[cmd] ?? [];
+    const subDesc = subs ? `\n          subcommands:(${subs.join(" ")})` : "";
+    const flagArgs = flags.map((f) => `'${f}[${f.replace(/^--/, "")} flag]'`).join("\n            ");
+    return `        (${cmd})
+          _arguments \\
+            ${flagArgs || "'*: :'"}\
+${subDesc}
+          ;;`;
+  }).join("\n");
 
+  return `#compdef swarmhq
+# swarmhq zsh completion
+# Add to ~/.zshrc: eval "$(swarmhq completions zsh)"
 _swarmhq() {
-  local state
+    local state line
+    typeset -A opt_args
 
-  _arguments \\
-    '1:command:->command' \\
-    '*:: :->args'
+    _arguments -C \\
+        '1: :->command' \\
+        '*: :->args'
 
-  case $state in
-    command)
-      local -a commands
-      commands=(
-        'config:Show, initialize, or locate config'
-        'health:Run cluster health checks'
-        'nodes:List swarm nodes'
-        'services:List swarm services'
-        'service:Inspect one swarm service or its tasks'
-        'leader:Show or switch swarm leader'
-        'ps:List task placements per node'
-        'redact:Preview config and env redaction'
-        'reboot:Reboot a swarm node safely'
-        'update:Scan and apply node or image updates'
-        'ui:Start the localhost dashboard'
-        'upgrade:Update the swarmhq CLI to the latest version'
-        'version:Print current version'
-        'help:Show command help'
-        'completions:Generate shell completion script'
-      )
-      _describe 'command' commands
-      ;;
-    args)
-      case $words[1] in
-        config)
-          local -a subcommands
-          subcommands=('show:Display current config' 'path:Print resolved config file path' 'init:Create an example config' 'wizard:Interactive setup wizard')
-          _describe 'subcommand' subcommands
-          ;;
-        leader)
-          local -a subcommands
-          subcommands=('status:Show current leader' 'switch:Move leadership to a target node')
-          _describe 'subcommand' subcommands
-          ;;
-        reboot)
-          local -a subcommands
-          subcommands=('list:List reboot targets' 'status:Check if a node is back online' 'node:Drain, reboot, and restore one node')
-          _describe 'subcommand' subcommands
-          ;;
-        update)
-          local -a subcommands
-          subcommands=('check:Scan for OS/Docker updates' 'node:Update one node' 'all:Update all nodes' 'services:Scan service images' 'service:Update one service image' 'containers:Scan container images' 'container:Update one container image')
-          _describe 'subcommand' subcommands
-          ;;
-        completions)
-          local -a shells
-          shells=('bash' 'zsh' 'fish')
-          _describe 'shell' shells
-          ;;
-      esac
-      ;;
-  esac
+    case $state in
+      command)
+        local commands
+        commands=(${COMMANDS.map((c) => `'${c}'`).join(" ")})
+        _describe 'command' commands
+        ;;
+      args)
+        case $line[1] in
+${commandDefs}
+          *)
+            _files
+            ;;
+        esac
+        ;;
+    esac
+}
+_swarmhq "$@"`;
 }
 
-_swarmhq
-`.trim();
+function fishCompletion(): string {
+  const commandCompletions = COMMANDS.map(
+    (cmd) => `complete -c swarmhq -f -n '__fish_use_subcommand' -a '${cmd}'`,
+  ).join("\n");
 
-export const FISH_COMPLETION = `
-# swarmhq fish completions
+  const subcommandCompletions = Object.entries(SUBCOMMANDS)
+    .map(([cmd, subs]) =>
+      subs
+        .map(
+          (sub) =>
+            `complete -c swarmhq -f -n '__fish_seen_subcommand_from ${cmd}' -a '${sub}'`,
+        )
+        .join("\n"),
+    )
+    .join("\n");
 
-set -l top_commands config health nodes services service leader ps redact reboot update ui upgrade version help completions
+  const flagCompletions = Object.entries(FLAGS)
+    .map(([cmd, flags]) =>
+      flags
+        .map(
+          (flag) =>
+            `complete -c swarmhq -n '__fish_seen_subcommand_from ${cmd}' -l '${flag.replace(/^--/, "")}'`,
+        )
+        .join("\n"),
+    )
+    .join("\n");
 
-# Top-level commands
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a config      -d 'Show, initialize, or locate config'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a health      -d 'Run cluster health checks'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a nodes       -d 'List swarm nodes'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a services    -d 'List swarm services'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a service     -d 'Inspect one swarm service or its tasks'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a leader      -d 'Show or switch swarm leader'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a ps          -d 'List task placements per node'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a redact      -d 'Preview config and env redaction'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a reboot      -d 'Reboot a swarm node safely'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a update      -d 'Scan and apply node or image updates'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a ui          -d 'Start the localhost dashboard'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a upgrade     -d 'Update the swarmhq CLI'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a version     -d 'Print current version'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a help        -d 'Show command help'
-complete -c swarmhq -f -n 'not __fish_seen_subcommand_from $top_commands' -a completions -d 'Generate shell completion script'
+  return `# swarmhq fish completion
+# Install: swarmhq completions fish > ~/.config/fish/completions/swarmhq.fish
+${commandCompletions}
 
-# config subcommands
-complete -c swarmhq -f -n '__fish_seen_subcommand_from config' -a show   -d 'Display current config'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from config' -a path   -d 'Print resolved config file path'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from config' -a init   -d 'Create an example config'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from config' -a wizard -d 'Interactive setup wizard'
+${subcommandCompletions}
 
-# leader subcommands
-complete -c swarmhq -f -n '__fish_seen_subcommand_from leader' -a status -d 'Show current swarm leader'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from leader' -a switch -d 'Move leadership to a target node'
+${flagCompletions}`;
+}
 
-# reboot subcommands
-complete -c swarmhq -f -n '__fish_seen_subcommand_from reboot' -a list   -d 'List reboot targets'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from reboot' -a status -d 'Check if a node is back online'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from reboot' -a node   -d 'Drain, reboot, and restore one node'
-
-# update subcommands
-complete -c swarmhq -f -n '__fish_seen_subcommand_from update' -a check      -d 'Scan for OS/Docker updates'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from update' -a node       -d 'Update one node'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from update' -a all        -d 'Update all nodes'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from update' -a services   -d 'Scan service image updates'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from update' -a service    -d 'Update one service image'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from update' -a containers -d 'Scan container image updates'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from update' -a container  -d 'Update one container image'
-
-# completions subcommands
-complete -c swarmhq -f -n '__fish_seen_subcommand_from completions' -a bash -d 'Bash completion script'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from completions' -a zsh  -d 'Zsh completion script'
-complete -c swarmhq -f -n '__fish_seen_subcommand_from completions' -a fish -d 'Fish completion script'
-`.trim();
+export const BASH_COMPLETION = bashCompletion();
+export const ZSH_COMPLETION = zshCompletion();
+export const FISH_COMPLETION = fishCompletion();
 
 export function runCompletionsCommand(args: string[]): void {
-  const shell = args[0];
+  const shell = args[0]?.trim() ?? "";
 
   switch (shell) {
     case "bash":
-      console.log(BASH_COMPLETION);
+      console.log(bashCompletion());
       return;
     case "zsh":
-      console.log(ZSH_COMPLETION);
+      console.log(zshCompletion());
       return;
     case "fish":
-      console.log(FISH_COMPLETION);
+      console.log(fishCompletion());
       return;
     default:
-      console.log("swarmhq completions <bash|zsh|fish>");
-      console.log("");
-      console.log("Examples:");
-      console.log("  swarmhq completions bash >> ~/.bash_completion");
-      console.log("  swarmhq completions zsh > ~/.zsh/completions/_swarmhq");
-      console.log("  swarmhq completions fish > ~/.config/fish/completions/swarmhq.fish");
+      console.error(`Unknown shell: ${shell || "(none)"}`);
+      console.error("Usage: swarmhq completions <bash|zsh|fish>");
+      process.exitCode = 1;
   }
 }

@@ -68,7 +68,7 @@ export async function runRebootCommand(args: string[]): Promise<void> {
     }
     default:
       console.log(
-        "swarmhq reboot <list|status|node> [--config PATH] [--target NODE] [--drain-wait SEC] [--boot-wait SEC] [--force] [--no-restore] [--yes]",
+        "swarmhq reboot <list|status|node> [--config PATH] [--target NODE] [--drain-wait SEC] [--boot-wait SEC] [--force] [--no-restore] [--yes] [--dry-run]",
       );
   }
 }
