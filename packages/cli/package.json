@@ -1,6 +1,6 @@
 {
   "name": "swarmhq",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "description": "Docker Swarm management CLI with an embedded localhost dashboard",
   "bin": {
@@ -41,7 +41,7 @@
     "build": "tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "bundle:ui": "node ./scripts/copy-ui.mjs",
-    "prepublishOnly": "npm run typecheck -w @swarmhq/core && npm run typecheck -w swarmhq"
+    "prepublishOnly": "npm run typecheck -w @swarmhq/core && npm run typecheck -w swarmhq && npm run bundle:ui"
   },
   "devDependencies": {
     "@swarmhq/core": "0.1.0",

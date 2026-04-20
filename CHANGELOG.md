@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-04-19
+
+### Fixed
+- UI server failed to locate bundled assets after npm install — `getUiBuildDir()` resolved paths relative to the TypeScript source file depth rather than the compiled bundle depth (`dist/bin.js`), causing all path candidates to miss the `ui-dist/` directory in the installed package
+- `copy-ui.mjs` now exits with code 1 (instead of 0) when the Next.js export directory is missing, so CI fails loudly rather than publishing a package without UI assets
+
+### Added
+- GitHub Actions workflow for automated Claude Code PR review
+
 ## [0.1.3] - 2026-04-19
 
 ### Fixed
