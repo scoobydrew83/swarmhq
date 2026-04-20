@@ -6,13 +6,18 @@ import { getUiBuildDir } from "../server/ui-server.js";
 
 describe("getUiBuildDir", () => {
   let tmpDir: string;
+  let originalSwarmUiDist: string | undefined;
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "swarmhq-test-"));
+    originalSwarmUiDist = process.env.SWARM_UI_DIST;
+    delete process.env.SWARM_UI_DIST;
   });
 
   afterEach(() => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
+    if (originalSwarmUiDist === undefined) delete process.env.SWARM_UI_DIST;
+    else process.env.SWARM_UI_DIST = originalSwarmUiDist;
   });
 
   it("resolves ui-dist one level above the dist directory", () => {
@@ -51,14 +56,8 @@ describe("getUiBuildDir", () => {
     const distDir = path.join(tmpDir, "dist");
     fs.mkdirSync(distDir);
 
-    const original = process.env.SWARM_UI_DIST;
     process.env.SWARM_UI_DIST = customDir;
-    try {
-      const result = getUiBuildDir(distDir);
-      expect(result).toBe(customDir);
-    } finally {
-      if (original === undefined) delete process.env.SWARM_UI_DIST;
-      else process.env.SWARM_UI_DIST = original;
-    }
+    const result = getUiBuildDir(distDir);
+    expect(result).toBe(customDir);
   });
 });
