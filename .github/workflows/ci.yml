@@ -43,6 +43,10 @@ jobs:
       - name: Security audit
         run: npm audit --audit-level=high
 
+      - name: Build UI for dry-run (Node 22 only)
+        if: matrix.node-version == 22
+        run: npm run build -w @swarmhq/ui && npm run bundle:ui -w swarmhq
+
       - name: Publish dry-run (Node 22 only)
         if: matrix.node-version == 22
         working-directory: packages/cli
