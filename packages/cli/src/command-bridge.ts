@@ -178,6 +178,9 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       if (readBoolean(values, "strictTarget")) {
         args.push("--strict-target");
       }
+      if (readBoolean(values, "dryRun")) {
+        args.push("--dry-run");
+      }
       if (readBoolean(values, "confirm")) {
         args.push("--yes");
       }
@@ -199,6 +202,9 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       }
       if (readBoolean(values, "noRestore")) {
         args.push("--no-restore");
+      }
+      if (readBoolean(values, "dryRun")) {
+        args.push("--dry-run");
       }
       if (readBoolean(values, "confirm")) {
         args.push("--yes");
@@ -231,6 +237,9 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       if (readBoolean(values, "skipReboot")) {
         args.push("--skip-reboot");
       }
+      if (readBoolean(values, "dryRun")) {
+        args.push("--dry-run");
+      }
       if (readBoolean(values, "confirm")) {
         args.push("--yes");
       }
@@ -251,6 +260,9 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       }
       if (readBoolean(values, "skipReboot")) {
         args.push("--skip-reboot");
+      }
+      if (readBoolean(values, "dryRun")) {
+        args.push("--dry-run");
       }
       if (readBoolean(values, "confirm")) {
         args.push("--yes");

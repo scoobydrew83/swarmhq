@@ -1,3 +1,4 @@
+import { loadConfig } from "@swarmhq/core";
 import {
   checkClusterNodeUpdates,
   scanContainerImageUpdates,
@@ -59,7 +60,25 @@ export async function runUpdateCommand(args: string[]): Promise<void> {
     case "check":
       console.log(await checkClusterNodeUpdates({ configPath, target, asJson }));
       return;
-    case "node":
+    case "node": {
+      if (args.includes("--dry-run")) {
+        const { config } = loadConfig(configPath);
+        const node = config.nodes.find((n) => n.id === target || n.host === target);
+        const nodeDesc = node ? `${node.id} (${node.host})` : target || "<no target specified>";
+        const steps = [
+          mode === "all" || mode === "os" ? "    1. Apply OS package updates (apt upgrade)" : null,
+          mode === "all" || mode === "docker" ? "    2. Apply Docker package updates" : null,
+          skipReboot ? "    3. Skip reboot (--skip-reboot)" : "    3. Run controlled reboot flow if node requires it",
+        ].filter(Boolean);
+        console.log([
+          `[DRY RUN] Would update node: ${nodeDesc}`,
+          `  Mode: ${mode}`,
+          "  Steps:",
+          ...steps,
+          "  No changes will be made. Remove --dry-run to apply.",
+        ].join("\n"));
+        return;
+      }
       console.log(
         await updateClusterNode({
           configPath,
@@ -70,7 +89,26 @@ export async function runUpdateCommand(args: string[]): Promise<void> {
         }),
       );
       return;
-    case "all":
+    }
+    case "all": {
+      if (args.includes("--dry-run")) {
+        const { config } = loadConfig(configPath);
+        const exclude = new Set(getExcludeList(args));
+        const targets = config.nodes.filter((n) => !exclude.has(n.id) && !exclude.has(n.host));
+        const nodeList = targets.map((n) => `      - ${n.id} (${n.host})`).join("\n");
+        console.log([
+          `[DRY RUN] Would update ${targets.length} node(s) sequentially`,
+          `  Mode: ${mode}`,
+          "  Nodes:",
+          nodeList || "      (none — all nodes excluded)",
+          "  Steps per node:",
+          mode === "all" || mode === "os" ? "    1. Apply OS package updates" : null,
+          mode === "all" || mode === "docker" ? "    2. Apply Docker package updates" : null,
+          skipReboot ? "    3. Skip reboot (--skip-reboot)" : "    3. Run controlled reboot flow if required",
+          "  No changes will be made. Remove --dry-run to apply.",
+        ].filter((line) => line !== null).join("\n"));
+        return;
+      }
       console.log(
         await updateAllClusterNodes({
           configPath,
@@ -81,6 +119,7 @@ export async function runUpdateCommand(args: string[]): Promise<void> {
         }),
       );
       return;
+    }
     case "services":
       console.log(await scanServiceImageUpdates({ configPath, asJson }));
       return;

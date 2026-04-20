@@ -124,6 +124,7 @@ swarmhq config wizard              # Interactive setup
 
 ```bash
 swarmhq version                    # Print current version
+swarmhq upgrade                    # Self-update to the latest version via npm
 swarmhq help <command>             # Show flags, subcommands, and examples
 swarmhq completions bash           # Generate bash completion script
 swarmhq completions zsh            # Generate zsh completion script

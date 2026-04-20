@@ -1,3 +1,4 @@
+import { loadConfig } from "@swarmhq/core";
 import {
   getRebootStatus,
   listRebootTargets,
@@ -28,19 +29,43 @@ export async function runRebootCommand(args: string[]): Promise<void> {
     case "status":
       console.log(await getRebootStatus({ configPath, target }));
       return;
-    case "node":
+    case "node": {
+      const drainWait = drainWaitIndex >= 0 ? Number(args[drainWaitIndex + 1] ?? "30") : 30;
+      const bootWait = bootWaitIndex >= 0 ? Number(args[bootWaitIndex + 1] ?? "300") : 300;
+      const force = args.includes("--force");
+      const noRestore = args.includes("--no-restore");
+      if (args.includes("--dry-run")) {
+        const { config } = loadConfig(configPath);
+        const node = config.nodes.find((n) => n.id === target || n.host === target);
+        const nodeDesc = node ? `${node.id} (${node.host})` : target || "<no target specified>";
+        console.log([
+          `[DRY RUN] Would reboot node: ${nodeDesc}`,
+          "  Steps:",
+          force
+            ? "    1. Skip drain (--force)"
+            : `    1. Drain node from swarm workloads (wait ${drainWait}s)`,
+          "    2. Send reboot command via SSH",
+          `    3. Wait for SSH to become available (up to ${bootWait}s)`,
+          noRestore
+            ? "    4. Leave node drained (--no-restore)"
+            : "    4. Restore node availability in swarm",
+          "  No changes will be made. Remove --dry-run to apply.",
+        ].join("\n"));
+        return;
+      }
       console.log(
         await rebootClusterNode({
           configPath,
           target,
-          drainWait: drainWaitIndex >= 0 ? Number(args[drainWaitIndex + 1] ?? "30") : 30,
-          bootWait: bootWaitIndex >= 0 ? Number(args[bootWaitIndex + 1] ?? "300") : 300,
-          force: args.includes("--force"),
-          noRestore: args.includes("--no-restore"),
+          drainWait,
+          bootWait,
+          force,
+          noRestore,
           confirm: args.includes("--yes"),
         }),
       );
       return;
+    }
     default:
       console.log(
         "swarmhq reboot <list|status|node> [--config PATH] [--target NODE] [--drain-wait SEC] [--boot-wait SEC] [--force] [--no-restore] [--yes]",

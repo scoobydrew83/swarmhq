@@ -1,3 +1,5 @@
+import { ConfigError, ConnectivityError } from "@swarmhq/core";
+import { runCompletionsCommand } from "./commands/completions.js";
 import { runConfigCommand } from "./commands/config.js";
 import { runHealthCommand } from "./commands/health.js";
 import { runLeaderCommand } from "./commands/leader.js";
@@ -21,18 +23,19 @@ Usage:
   swarmhq <command> [options]
 
 Commands:
-  config   Show, initialize, or locate config
-  health   Run SSH-backed cluster health checks
-  nodes    Query swarm nodes through configured SSH targets
-  services Query swarm services through configured SSH targets
-  service  Inspect one swarm service or its tasks
-  leader   Show current swarm leader status
-  reboot   Reboot configured swarm nodes safely
-  update   Scan and apply node or image updates
-  ps       List swarm task placements
-  redact   Preview redaction behavior through the CLI
-  ui       Start the localhost dashboard
-  upgrade  Check for and install swarmhq CLI updates
+  config       Show, initialize, or locate config
+  health       Run SSH-backed cluster health checks
+  nodes        Query swarm nodes through configured SSH targets
+  services     Query swarm services through configured SSH targets
+  service      Inspect one swarm service or its tasks
+  leader       Show current swarm leader status
+  reboot       Reboot configured swarm nodes safely
+  update       Scan and apply node or image updates
+  ps           List swarm task placements
+  redact       Preview redaction behavior through the CLI
+  ui           Start the localhost dashboard
+  upgrade      Check for and install swarmhq CLI updates
+  completions  Generate shell completion script (bash, zsh, fish)
 
 Examples:
   swarmhq config init
@@ -98,6 +101,9 @@ async function main(): Promise<void> {
     case "upgrade":
       await runUpgradeCommand(args);
       return;
+    case "completions":
+      runCompletionsCommand(args);
+      return;
     default:
       throw new Error(`Unknown command: ${command}`);
   }
@@ -106,5 +112,11 @@ async function main(): Promise<void> {
 main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   console.error(`Error: ${message}`);
-  process.exitCode = 1;
+  if (error instanceof ConfigError) {
+    process.exitCode = 2;
+  } else if (error instanceof ConnectivityError) {
+    process.exitCode = 3;
+  } else {
+    process.exitCode = 1;
+  }
 });

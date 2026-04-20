@@ -1118,3 +1118,18 @@ code, pre, .mono { font-family: var(--font-mono); }
   .cmd-bar { padding: 10px 14px; }
   .cmd-name { font-size: 1.25rem; }
 }
+
+/* ===================================================================
+   COMPLETIONS PANEL
+   =================================================================== */
+
+.completions-panel { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.completions-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--border); gap: 8px; flex-shrink: 0; }
+.completions-shell-tabs { display: flex; gap: 4px; }
+.completions-shell-tab { font-family: var(--font-mono); font-size: 0.75rem; padding: 3px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: transparent; color: var(--text-dim); cursor: pointer; transition: var(--transition); }
+.completions-shell-tab:hover { background: var(--s2); color: var(--text); }
+.completions-shell-tab.active { background: var(--cyan); color: var(--bg); border-color: var(--cyan); }
+.completions-hint { display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--s1); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.completions-hint-code { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.completions-script-wrap { flex: 1; overflow: auto; padding: 14px; }
+.completions-script { font-family: var(--font-mono); font-size: 0.72rem; line-height: 1.6; color: var(--text-dim); white-space: pre; }

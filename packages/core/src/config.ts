@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { ConfigError } from "./errors.js";
 import { getDefaultConfigPath, getDefaultEnvPath } from "./paths.js";
 import type {
   ConfigBuilderDefaults,
@@ -136,43 +137,64 @@ export function loadConfigIfPresent(explicitPath?: string): { config: SwarmConfi
 
 export function validateConfig(config: SwarmConfig): void {
   if (config.version !== 1) {
-    throw new Error(`Unsupported config version: ${config.version}`);
+    throw new ConfigError(`Unsupported config version: ${config.version}`);
   }
 
   if (!config.clusterName.trim()) {
-    throw new Error("clusterName is required");
+    throw new ConfigError("clusterName is required");
   }
 
   if (!config.vip.trim()) {
-    throw new Error("vip is required");
+    throw new ConfigError("vip is required");
   }
 
   if (config.nodes.length === 0) {
-    throw new Error("At least one node is required");
+    throw new ConfigError("At least one node is required");
+  }
+
+  for (const [index, node] of config.nodes.entries()) {
+    const label = `nodes[${index}]`;
+    if (!node.id?.trim()) {
+      throw new ConfigError(`${label}.id is required`);
+    }
+    if (!node.host?.trim()) {
+      throw new ConfigError(`${label}.host is required`);
+    }
+    if (!node.username?.trim()) {
+      throw new ConfigError(`${label}.username is required`);
+    }
+    if (!node.roles || node.roles.length === 0) {
+      throw new ConfigError(`${label}.roles must contain at least one role`);
+    }
   }
 
   if (!config.keepalived.interface.trim()) {
-    throw new Error("keepalived.interface is required");
+    throw new ConfigError("keepalived.interface is required");
   }
 
   if (!config.keepalived.routerId.trim()) {
-    throw new Error("keepalived.routerId is required");
+    throw new ConfigError("keepalived.routerId is required");
   }
 
   if (!config.keepalived.authPassEnv.trim()) {
-    throw new Error("keepalived.authPassEnv is required");
+    throw new ConfigError("keepalived.authPassEnv is required");
   }
 
   if (config.keepalived.virtualRouterId < 1 || config.keepalived.virtualRouterId > 255) {
-    throw new Error("keepalived.virtualRouterId must be between 1 and 255");
+    throw new ConfigError("keepalived.virtualRouterId must be between 1 and 255");
   }
 
   if (config.keepalived.advertisementInterval < 1) {
-    throw new Error("keepalived.advertisementInterval must be at least 1 second");
+    throw new ConfigError("keepalived.advertisementInterval must be at least 1 second");
+  }
+
+  const sshPort = config.ssh.port;
+  if (!Number.isInteger(sshPort) || sshPort < 1 || sshPort > 65535) {
+    throw new ConfigError("ssh.port must be an integer between 1 and 65535");
   }
 
   if (!config.nodes.some((node) => node.roles.includes("manager"))) {
-    throw new Error("At least one manager node is required");
+    throw new ConfigError("At least one manager node is required");
   }
 }
 

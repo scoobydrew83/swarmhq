@@ -19,6 +19,11 @@ function fetchLatestVersion(): Promise<string> {
             reject(new Error("No version field in npm registry response"));
             return;
           }
+          const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[\w.]+)?(?:\+[\w.]+)?$/;
+          if (!SEMVER_RE.test(parsed.version)) {
+            reject(new Error(`Unexpected version format in npm registry response: ${parsed.version}`));
+            return;
+          }
           resolve(parsed.version);
         } catch {
           reject(new Error("Failed to parse npm registry response"));
@@ -40,12 +45,12 @@ function isNewer(latest: string, current: string): boolean {
   return false;
 }
 
-async function checkForUpdate(): Promise<{ current: string; latest: string; updateAvailable: boolean }> {
+export async function checkForUpdate(): Promise<{ current: string; latest: string; updateAvailable: boolean }> {
   const latest = await fetchLatestVersion();
   return { current: CURRENT_VERSION, latest, updateAvailable: isNewer(latest, CURRENT_VERSION) };
 }
 
-function applyUpdate(version: string): void {
+export function applyUpdate(version: string): void {
   console.log(`Installing swarmhq@${version}...`);
   const result = spawnSync("npm", ["install", "-g", `${NPM_PACKAGE}@${version}`], {
     stdio: "inherit",
