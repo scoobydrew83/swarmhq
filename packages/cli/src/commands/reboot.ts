@@ -21,6 +21,8 @@ export async function runRebootCommand(args: string[]): Promise<void> {
   const drainWaitIndex = args.indexOf("--drain-wait");
   const bootWaitIndex = args.indexOf("--boot-wait");
 
+  const dryRun = args.includes("--dry-run");
+
   switch (subcommand) {
     case "list":
       console.log(await listRebootTargets({ configPath }));
@@ -37,13 +39,14 @@ export async function runRebootCommand(args: string[]): Promise<void> {
           bootWait: bootWaitIndex >= 0 ? Number(args[bootWaitIndex + 1] ?? "300") : 300,
           force: args.includes("--force"),
           noRestore: args.includes("--no-restore"),
-          confirm: args.includes("--yes"),
+          confirm: args.includes("--yes") || dryRun,
+          dryRun,
         }),
       );
       return;
     default:
       console.log(
-        "swarmhq reboot <list|status|node> [--config PATH] [--target NODE] [--drain-wait SEC] [--boot-wait SEC] [--force] [--no-restore] [--yes]",
+        "swarmhq reboot <list|status|node> [--config PATH] [--target NODE] [--drain-wait SEC] [--boot-wait SEC] [--force] [--no-restore] [--yes] [--dry-run]",
       );
   }
 }

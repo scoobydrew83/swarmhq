@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { ConfigError } from "./errors.js";
 import { getDefaultConfigPath, getDefaultEnvPath } from "./paths.js";
 import type {
   ConfigBuilderDefaults,
@@ -126,7 +127,7 @@ export function loadConfigIfPresent(explicitPath?: string): { config: SwarmConfi
   try {
     return loadConfig(explicitPath);
   } catch (error) {
-    if (error instanceof Error && error.message.startsWith("Config file not found")) {
+    if (error instanceof Error && /^Config file not found at/.test(error.message)) {
       return null;
     }
 
@@ -136,43 +137,84 @@ export function loadConfigIfPresent(explicitPath?: string): { config: SwarmConfi
 
 export function validateConfig(config: SwarmConfig): void {
   if (config.version !== 1) {
-    throw new Error(`Unsupported config version: ${config.version}`);
+    throw new ConfigError(
+      `Unsupported config version: ${String(config.version)}. Expected version 1. ` +
+        `Please regenerate your config with 'swarmhq config init'.`,
+    );
   }
 
-  if (!config.clusterName.trim()) {
-    throw new Error("clusterName is required");
+  if (!config.clusterName?.trim()) {
+    throw new ConfigError("'clusterName' is required in config but is missing or empty.");
   }
 
-  if (!config.vip.trim()) {
-    throw new Error("vip is required");
+  if (!config.vip?.trim()) {
+    throw new ConfigError("'vip' (virtual IP address) is required in config but is missing or empty.");
   }
 
-  if (config.nodes.length === 0) {
-    throw new Error("At least one node is required");
+  if (!Array.isArray(config.nodes) || config.nodes.length === 0) {
+    throw new ConfigError(
+      "At least one node must be defined in the 'nodes' array. Run 'swarmhq config wizard' to add nodes.",
+    );
   }
 
-  if (!config.keepalived.interface.trim()) {
-    throw new Error("keepalived.interface is required");
-  }
-
-  if (!config.keepalived.routerId.trim()) {
-    throw new Error("keepalived.routerId is required");
-  }
-
-  if (!config.keepalived.authPassEnv.trim()) {
-    throw new Error("keepalived.authPassEnv is required");
-  }
-
-  if (config.keepalived.virtualRouterId < 1 || config.keepalived.virtualRouterId > 255) {
-    throw new Error("keepalived.virtualRouterId must be between 1 and 255");
-  }
-
-  if (config.keepalived.advertisementInterval < 1) {
-    throw new Error("keepalived.advertisementInterval must be at least 1 second");
+  for (const [index, node] of config.nodes.entries()) {
+    const label = node.id?.trim() ? `node '${node.id}'` : `nodes[${index}]`;
+    if (!node.id?.trim()) {
+      throw new ConfigError(`${label}: 'id' is required and must not be empty.`);
+    }
+    if (!node.host?.trim()) {
+      throw new ConfigError(`Node '${node.id}': 'host' is required and must not be empty.`);
+    }
+    if (!node.username?.trim()) {
+      throw new ConfigError(`Node '${node.id}': 'username' is required and must not be empty.`);
+    }
+    if (!Array.isArray(node.roles) || node.roles.length === 0) {
+      throw new ConfigError(`Node '${node.id}': 'roles' must be a non-empty array (e.g. ["manager"]).`);
+    }
   }
 
   if (!config.nodes.some((node) => node.roles.includes("manager"))) {
-    throw new Error("At least one manager node is required");
+    throw new ConfigError(
+      "At least one node must have the 'manager' role. Assign roles: [\"manager\"] to one or more nodes.",
+    );
+  }
+
+  if (!config.ssh) {
+    throw new ConfigError("'ssh' configuration block is missing from config.");
+  }
+
+  if (config.ssh.port < 1 || config.ssh.port > 65535) {
+    throw new ConfigError(`'ssh.port' must be between 1 and 65535, got ${config.ssh.port}.`);
+  }
+
+  if (!config.keepalived) {
+    throw new ConfigError("'keepalived' configuration block is missing from config.");
+  }
+
+  if (!config.keepalived.interface?.trim()) {
+    throw new ConfigError("'keepalived.interface' is required (e.g. \"eth0\").");
+  }
+
+  if (!config.keepalived.routerId?.trim()) {
+    throw new ConfigError("'keepalived.routerId' is required (e.g. \"SWARMCLI\").");
+  }
+
+  if (!config.keepalived.authPassEnv?.trim()) {
+    throw new ConfigError(
+      "'keepalived.authPassEnv' is required. Set the env var name holding the VRRP password (e.g. \"SWARM_VRRP_PASSWORD\").",
+    );
+  }
+
+  if (config.keepalived.virtualRouterId < 1 || config.keepalived.virtualRouterId > 255) {
+    throw new ConfigError(
+      `'keepalived.virtualRouterId' must be between 1 and 255, got ${config.keepalived.virtualRouterId}.`,
+    );
+  }
+
+  if (config.keepalived.advertisementInterval < 1) {
+    throw new ConfigError(
+      `'keepalived.advertisementInterval' must be at least 1 second, got ${config.keepalived.advertisementInterval}.`,
+    );
   }
 }
 
@@ -180,10 +222,20 @@ export function loadConfig(explicitPath?: string): { config: SwarmConfig; path: 
   const configPath = resolveConfigPath(explicitPath);
 
   if (!fs.existsSync(configPath)) {
-    throw new Error(`Config file not found at ${configPath}`);
+    throw new ConfigError(
+      `Config file not found at ${configPath}. Run 'swarmhq config init' to create one.`,
+    );
   }
 
-  const parsed = JSON.parse(fs.readFileSync(configPath, "utf8")) as SwarmConfig;
+  let parsed: SwarmConfig;
+  try {
+    parsed = JSON.parse(fs.readFileSync(configPath, "utf8")) as SwarmConfig;
+  } catch {
+    throw new ConfigError(
+      `Config file at ${configPath} is not valid JSON. Run 'swarmhq config init --force' to recreate it.`,
+    );
+  }
+
   validateConfig(parsed);
 
   return {
