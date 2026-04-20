@@ -21,13 +21,13 @@ The initial release ships a functional Docker Swarm management tool with:
 
 > Goal: Make the project production-ready for contributors and daily use.
 
-- [ ] **Shell completions** — bash/zsh/fish autocomplete for commands and flags
-- [ ] **`swarmhq version`** — print CLI version from package.json
-- [ ] **`swarmhq help <command>`** — per-command help with flag descriptions
-- [ ] **Test suite expansion** — unit tests for cluster-runtime, command-bridge, docker-runtime
-- [ ] **Error codes** — structured exit codes for scripting (0 success, 1 general error, 2 config error, 3 connectivity error)
-- [ ] **Config validation improvements** — better error messages when config is malformed or missing required fields
-- [ ] **`--dry-run` flag** — show what commands would be executed without running them (maintenance ops)
+- [x] **Shell completions** — bash/zsh/fish autocomplete for commands and flags
+- [x] **`swarmhq version`** — print CLI version from package.json
+- [x] **`swarmhq help <command>`** — per-command help with flag descriptions
+- [x] **Test suite expansion** — unit tests for cluster-runtime, command-bridge, docker-runtime
+- [x] **Error codes** — structured exit codes for scripting (0 success, 1 general error, 2 config error, 3 connectivity error)
+- [x] **Config validation improvements** — better error messages when config is malformed or missing required fields
+- [x] **`--dry-run` flag** — show what commands would be executed without running them (maintenance ops)
 
 ---
 
