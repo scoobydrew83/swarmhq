@@ -169,10 +169,6 @@ async function runConfigWizard(args: string[]): Promise<void> {
         await rl.question(`Keepalived advertisement interval [${input.keepalivedAdvertisementInterval}]: `),
         input.keepalivedAdvertisementInterval,
       );
-      input.keepalivedAuthPassEnv = readText(
-        await rl.question(`VRRP password env var [${input.keepalivedAuthPassEnv}]: `),
-        input.keepalivedAuthPassEnv,
-      );
       input.vrrpPassword = readText(
         await rl.question(`VRRP password [${input.vrrpPassword ?? ""}]: `),
         input.vrrpPassword ?? "",
@@ -217,10 +213,6 @@ async function runConfigWizard(args: string[]): Promise<void> {
       keepalivedAdvertisementInterval: parseNumber(
         readFlagValue(args, "--advertisement-interval") ?? String(input.keepalivedAdvertisementInterval),
         input.keepalivedAdvertisementInterval,
-      ),
-      keepalivedAuthPassEnv: readText(
-        readFlagValue(args, "--auth-pass-env"),
-        input.keepalivedAuthPassEnv,
       ),
       vrrpPassword: readText(readFlagValue(args, "--vrrp-password"), input.vrrpPassword ?? ""),
       tailscaleAuthKey: readText(

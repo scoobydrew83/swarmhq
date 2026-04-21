@@ -14,7 +14,6 @@ export interface KeepalivedConfig {
   routerId: string;
   virtualRouterId: number;
   advertisementInterval: number;
-  authPassEnv: string;
 }
 
 export interface SwarmNode {
@@ -68,7 +67,6 @@ export interface ConfigBuilderInput {
   keepalivedRouterId: string;
   keepalivedVirtualRouterId: number;
   keepalivedAdvertisementInterval: number;
-  keepalivedAuthPassEnv: string;
   sshPort: number;
   sshMode: HostKeyCheckingMode;
   hideIps: boolean;

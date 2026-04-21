@@ -6,6 +6,7 @@ import type {
   CommandCatalog,
   CommandExecutionResult,
   HealthSnapshot,
+  PicklistDefinition,
   SwarmConfig,
 } from "@swarmhq/core";
 import { ActivityFeed } from "../components/activity-feed";
@@ -44,6 +45,7 @@ type CommandResponsePayload = {
 type VersionPayload = { version: string };
 type UpgradeCheckPayload = { current: string; latest: string; updateAvailable: boolean };
 type UpgradeApplyPayload = { upgraded: boolean; version?: string; message: string };
+type ServicesPayload = { services: Array<{ name: string; image: string }> };
 
 type ActivityStreamPayload =
   | { type: "snapshot"; activities: ActivityEntry[] }
@@ -71,6 +73,20 @@ function buildDefaultValues(
       .filter((o) => o.defaultValue !== undefined)
       .map((o) => [o.id, o.defaultValue as string | boolean]),
   );
+}
+
+function resolvePicklist(
+  picklist: PicklistDefinition,
+  nodes: SwarmConfig["nodes"],
+  services: ServicesPayload["services"],
+): PicklistDefinition {
+  if (picklist.id === "cluster-nodes") {
+    return { ...picklist, options: nodes.map((n) => ({ value: n.id, label: n.id })) };
+  }
+  if (picklist.id === "cluster-services") {
+    return { ...picklist, options: services.map((s) => ({ value: s.name, label: s.name })) };
+  }
+  return picklist;
 }
 
 async function readErrorMessage(response: Response, fallback: string): Promise<string> {
@@ -105,6 +121,7 @@ export default function Page() {
   const [busy, setBusy] = useState(false);
   const [rightTab, setRightTab] = useState<"activity" | "output" | "completions">("activity");
   const [outputModal, setOutputModal] = useState(false);
+  const [services, setServices] = useState<ServicesPayload["services"]>([]);
   const [version, setVersion] = useState<string | null>(null);
   const [upgradeCheck, setUpgradeCheck] = useState<UpgradeCheckPayload | null>(null);
   const [upgradeStatus, setUpgradeStatus] = useState<"idle" | "checking" | "upgrading" | "done" | "error">("idle");
@@ -124,18 +141,25 @@ export default function Page() {
         setSession(nextSession);
 
         const headers = buildHeaders(nextSession.token);
-        const [metaRes, configRes, healthRes, activityRes, versionRes] = await Promise.all([
+        const [metaRes, configRes, healthRes, activityRes, versionRes, servicesRes] = await Promise.all([
           fetch("/api/meta", { headers }),
           fetch("/api/config", { headers }),
           fetch("/api/health", { headers }),
           fetch("/api/activity", { headers }),
           fetch("/api/version", { headers }),
+          fetch("/api/services", { headers }),
         ]);
 
         if (versionRes.ok) {
           const v = (await versionRes.json()) as VersionPayload;
           if (!cancelled) setVersion(v.version);
         }
+
+        if (servicesRes.ok) {
+          const s = (await servicesRes.json()) as ServicesPayload;
+          if (!cancelled) setServices(s.services ?? []);
+        }
+
 
         if (!metaRes.ok) throw new Error("Failed to load command metadata.");
         if (!activityRes.ok) throw new Error("Failed to load activity log.");
@@ -326,6 +350,13 @@ export default function Page() {
   const nodes = config?.nodes ?? [];
   const hasOutput = !!(result || commandError);
 
+  const resolvedCatalog: CommandCatalog = catalog
+    ? {
+        ...catalog,
+        picklists: catalog.picklists.map((pl) => resolvePicklist(pl, nodes, services)),
+      }
+    : EMPTY_CATALOG;
+
   return (
     <div className="app-shell">
       {/* ── TOP NAV ──────────────────────────────────────────────── */}
@@ -463,7 +494,7 @@ export default function Page() {
           ) : null}
 
           <CommandCenter
-            catalog={catalog ?? EMPTY_CATALOG}
+            catalog={resolvedCatalog}
             selectedCommandId={selectedCommandId}
             values={values}
             busy={busy}

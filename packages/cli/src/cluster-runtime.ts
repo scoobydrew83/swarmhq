@@ -953,10 +953,10 @@ async function waitForCondition(
 
 async function updateKeepalivedForTarget(context: RuntimeContext, targetNode: SwarmNode): Promise<void> {
   const secrets = loadRuntimeSecrets();
-  const password = process.env[context.config.keepalived.authPassEnv] ?? secrets.vrrpPassword;
+  const password = secrets.vrrpPassword;
 
   if (!password?.trim()) {
-    throw new Error(`Missing VRRP password in ${context.config.keepalived.authPassEnv}.`);
+    throw new Error("Missing VRRP password. Set SWARM_VRRP_PASSWORD in your env file.");
   }
   if (/[\r\n]/.test(password)) {
     throw new Error("VRRP password must not contain newline characters.");
@@ -1285,6 +1285,7 @@ type NodeUpdateSummary = {
 type ServiceUpdateSummary = {
   serviceName: string;
   sourceImage: string;
+  currentTag: string;
   currentDigest: string | null;
   latestDigest: string | null;
   updateAvailable: boolean;
@@ -1314,7 +1315,7 @@ async function getNodeVersionSummary(context: RuntimeContext, node: SwarmNode): 
       id: node.id,
       host: node.host,
       hostname,
-      role: "unknown",
+      role: node.roles.includes("manager") ? "manager" : "worker",
       osVersion: "unknown",
       kernel: "unknown",
       dockerVersion: "unknown",
@@ -1326,7 +1327,7 @@ async function getNodeVersionSummary(context: RuntimeContext, node: SwarmNode): 
     };
   }
 
-  const role = await getNodeRole(context, node);
+  const role = node.roles.includes("manager") ? "manager" : "worker";
   const osVersion =
     ((await tryExecSsh(context, node, "awk -F= '/^PRETTY_NAME=/{gsub(/\"/,\"\",$2); print $2; exit}' /etc/os-release"))?.trim() ||
       "unknown");
@@ -1396,7 +1397,11 @@ function renderNodeUpdateSummaries(summaries: NodeUpdateSummary[]): string {
     ]),
   ];
 
-  return formatTable(rows);
+  const needsUpdate = summaries.filter(
+    (s) => (s.packageUpdates !== null && s.packageUpdates > 0) || s.dockerCandidate !== null,
+  ).length;
+  const footer = `\n${needsUpdate}/${summaries.length} node(s) have pending updates.`;
+  return formatTable(rows) + footer;
 }
 
 export async function checkClusterNodeUpdates(options: {
@@ -1582,6 +1587,14 @@ function extractImageSourceFromService(service: Record<string, unknown>): string
   return String(labels["com.docker.stack.image"] ?? containerSpec.Image ?? "").split("@")[0];
 }
 
+function extractCurrentTagFromService(service: Record<string, unknown>): string {
+  const spec = (service.Spec ?? {}) as Record<string, unknown>;
+  const taskTemplate = (spec.TaskTemplate ?? {}) as Record<string, unknown>;
+  const containerSpec = (taskTemplate.ContainerSpec ?? {}) as Record<string, unknown>;
+  const image = String(containerSpec.Image ?? "").split("@")[0];
+  return image.includes(":") ? (image.split(":").pop() ?? "latest") : "latest";
+}
+
 function extractCurrentDigestFromService(service: Record<string, unknown>): string | null {
   const spec = (service.Spec ?? {}) as Record<string, unknown>;
   const taskTemplate = (spec.TaskTemplate ?? {}) as Record<string, unknown>;
@@ -1628,11 +1641,13 @@ export async function scanServiceImageUpdates(options: {
     const spec = (service.Spec ?? {}) as Record<string, unknown>;
     const serviceName = String(spec.Name ?? "unknown");
     const sourceImage = extractImageSourceFromService(service);
+    const currentTag = extractCurrentTagFromService(service);
     const currentDigest = extractCurrentDigestFromService(service);
     const latestDigest = sourceImage ? await pullLatestImageDigest(context, sourceImage, digestCache) : null;
     summaries.push({
       serviceName,
       sourceImage,
+      currentTag,
       currentDigest,
       latestDigest,
       updateAvailable: Boolean(currentDigest && latestDigest && currentDigest !== latestDigest),
@@ -1644,16 +1659,18 @@ export async function scanServiceImageUpdates(options: {
   }
 
   const rows = [
-    ["SERVICE", "IMAGE", "CURRENT", "LATEST", "UPDATE"],
+    ["SERVICE", "IMAGE", "TAG", "DIGEST", "STATUS"],
     ...summaries.map((summary) => [
       summary.serviceName,
       summary.sourceImage || "unknown",
+      summary.currentTag,
       summary.currentDigest?.slice(0, 12) ?? "-",
-      summary.latestDigest?.slice(0, 12) ?? "-",
-      summary.updateAvailable ? "yes" : "no",
+      summary.updateAvailable ? "UPDATE AVAILABLE" : "up to date",
     ]),
   ];
-  return formatTable(rows);
+  const updatesCount = summaries.filter((s) => s.updateAvailable).length;
+  const footer = `\n${updatesCount}/${summaries.length} service(s) have updates available.`;
+  return formatTable(rows) + footer;
 }
 
 export async function updateServiceImage(options: {
@@ -1690,6 +1707,52 @@ export async function updateServiceImage(options: {
 
   const latestDigest = await pullLatestImageDigest(context, image, new Map());
   return [`Service updated: ${options.serviceName}`, `Image: ${image}`, `Latest digest: ${latestDigest ?? "unknown"}`].join("\n");
+}
+
+export async function listClusterServiceNames(options: {
+  configPath?: string;
+}): Promise<Array<{ name: string; image: string }>> {
+  const context = readContext(options.configPath);
+  const services = await inspectAllServices(context);
+  return services.map((service) => {
+    const spec = (service.Spec ?? {}) as Record<string, unknown>;
+    return {
+      name: String(spec.Name ?? "unknown"),
+      image: extractImageSourceFromService(service),
+    };
+  });
+}
+
+export async function promoteClusterNode(options: {
+  configPath?: string;
+  nodeId: string;
+  confirm?: boolean;
+}): Promise<string> {
+  if (!options.confirm) {
+    throw new Error("Node promotion requires explicit confirmation.");
+  }
+  if (!options.nodeId?.trim()) {
+    throw new Error("A node ID is required.");
+  }
+  const context = readContext(options.configPath);
+  await runLeaderDockerCommand(context, `docker node promote ${shellEscape(options.nodeId.trim())}`);
+  return `Node promoted to manager: ${options.nodeId}`;
+}
+
+export async function demoteClusterNode(options: {
+  configPath?: string;
+  nodeId: string;
+  confirm?: boolean;
+}): Promise<string> {
+  if (!options.confirm) {
+    throw new Error("Node demotion requires explicit confirmation.");
+  }
+  if (!options.nodeId?.trim()) {
+    throw new Error("A node ID is required.");
+  }
+  const context = readContext(options.configPath);
+  await runLeaderDockerCommand(context, `docker node demote ${shellEscape(options.nodeId.trim())}`);
+  return `Node demoted to worker: ${options.nodeId}`;
 }
 
 async function listRunningContainers(context: RuntimeContext): Promise<Array<Record<string, string>>> {
