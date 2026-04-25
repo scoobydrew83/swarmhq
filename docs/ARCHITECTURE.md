@@ -19,5 +19,5 @@
 
 1. `swarmhq ui` loads config and generates a session token.
 2. The CLI starts a localhost HTTP server on a random free port.
-3. Static UI assets are served from `packages/cli/ui-dist` or `packages/ui/out`.
+3. Static UI assets are served from the package's bundled `ui-dist/` directory; local development can fall back to `packages/ui/out`.
 4. Browser requests call constrained API routes such as `/api/session`, `/api/config`, and `/api/health`.

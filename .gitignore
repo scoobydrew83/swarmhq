@@ -10,6 +10,7 @@ out/
 *.log
 *.tsbuildinfo
 packages/cli/ui-dist/
+.swarmhq/
 .swarm-cli/
 swarm.config.json
 swarm.config.local.json

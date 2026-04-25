@@ -511,7 +511,8 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
     <main>
       <h1>swarmhq ui</h1>
       <p>The local API server is running, but exported UI assets were not found.</p>
-      <p>Build the UI with <code>npm run build -w @swarmhq/ui</code> and then copy it with <code>npm run bundle:ui -w swarmhq</code>.</p>
+      <p>If this came from npm, reinstall <code>swarmhq</code> or report a package missing bundled UI assets.</p>
+      <p>For local development, build the UI with <code>npm run build -w @swarmhq/ui</code> and then copy it with <code>npm run bundle:ui -w swarmhq</code>.</p>
       <p>Config path: <code>${initial?.path ?? resolvedConfigPath}</code></p>
     </main>
   </body>

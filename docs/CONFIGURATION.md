@@ -26,7 +26,7 @@ SWARM_UI_OPEN=true
 
 Use `SWARM_CONFIG_FILE` when your config lives somewhere other than `~/.config/swarmhq/config.json`.
 
-Keep the VRRP password in the env file only. The config file stores the env var name to read, not the secret value itself.
+Keep the VRRP password in the env file only. `swarmhq` reads it from `SWARM_VRRP_PASSWORD`.
 
 ## What Goes In `config.json`
 
@@ -52,10 +52,9 @@ Use `config.json` for cluster topology and non-secret defaults.
   "keepalived": {
     "enabled": true,
     "interface": "eth0",
-    "routerId": "SWARMCLI",
+    "routerId": "SWARMHQ",
     "virtualRouterId": 51,
-    "advertisementInterval": 1,
-    "authPassEnv": "SWARM_VRRP_PASSWORD"
+    "advertisementInterval": 1
   },
   "ssh": {
     "port": 22,
@@ -101,9 +100,6 @@ Use the top-level `keepalived` block for shared HA defaults.
   VRID shared by all keepalived participants. Must be between `1` and `255`.
 - `advertisementInterval`
   VRRP advert interval in seconds.
-- `authPassEnv`
-  Name of the env var that stores the VRRP password. The value itself stays in `.env`.
-
 Use per-node overrides under `nodes[].keepalived` when one node needs a different priority or explicit initial state.
 
 - `priority`

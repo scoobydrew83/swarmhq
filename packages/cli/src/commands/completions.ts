@@ -18,6 +18,7 @@ const COMMANDS = [
 
 const SUBCOMMANDS: Record<string, string[]> = {
   config: ["show", "path", "init", "wizard"],
+  nodes: ["promote", "demote"],
   service: ["inspect", "tasks"],
   leader: ["status", "switch"],
   reboot: ["list", "status", "node"],
@@ -28,7 +29,7 @@ const SUBCOMMANDS: Record<string, string[]> = {
 const FLAGS: Record<string, string[]> = {
   config: ["--config", "--env", "--json", "--cluster-name", "--vip", "--ssh-mode", "--hide-ips", "--force", "--yes"],
   health: ["--config", "--json", "--detailed"],
-  nodes: ["--config", "--context", "--json"],
+  nodes: ["--config", "--context", "--target", "--json", "--yes"],
   services: ["--config", "--context", "--json"],
   service: ["--config", "--context", "--name", "--all", "--json"],
   leader: ["--config", "--context", "--target", "--vip-only", "--swarm-only", "--strict-target", "--json", "--yes", "--dry-run"],

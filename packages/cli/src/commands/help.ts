@@ -56,17 +56,25 @@ const COMMAND_HELP: Record<string, CommandHelp> = {
     ],
   },
   nodes: {
-    usage: "swarmhq nodes [options]",
-    description: "List swarm nodes. Uses SSH by default; pass --context to query a local Docker context.",
+    usage: "swarmhq nodes [promote|demote] [options]",
+    description: "List swarm nodes, or promote/demote a configured node through SSH.",
+    subcommands: [
+      { name: "promote", description: "Promote a worker node to manager" },
+      { name: "demote", description: "Demote a manager node to worker" },
+    ],
     flags: [
       { flag: "--config PATH", description: "Path to config file" },
-      { flag: "--context NAME", description: "Docker context name (skips SSH)" },
-      { flag: "--json", description: "Output in JSON format" },
+      { flag: "--context NAME", description: "Docker context name for list mode (skips SSH)" },
+      { flag: "--target NODE", description: "Node id or host to promote/demote" },
+      { flag: "--json", description: "Output list mode in JSON format" },
+      { flag: "--yes", description: "Confirm promote/demote operation" },
     ],
     examples: [
       "swarmhq nodes",
       "swarmhq nodes --json",
       "swarmhq nodes --context production",
+      "swarmhq nodes promote --target worker-a --yes",
+      "swarmhq nodes demote --target manager-c --yes",
     ],
   },
   services: {

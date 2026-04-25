@@ -64,7 +64,7 @@ swarmhq health --detailed
 swarmhq ui
 ```
 
-The dashboard opens in your browser at `http://127.0.0.1:<port>?token=<session-token>`.
+The dashboard opens in your browser at `http://127.0.0.1:<port>` and retrieves its local session token automatically.
 
 ---
 
@@ -83,7 +83,7 @@ swarmhq health --json              # Machine-readable output
 ```bash
 swarmhq nodes                      # List swarm nodes
 swarmhq services                   # List services
-swarmhq service --name <svc>       # Inspect a service
+swarmhq service inspect --name <svc> # Inspect a service
 swarmhq service tasks --name <svc> # Show task placement
 swarmhq leader                     # Leader status
 swarmhq ps                         # Task placements per node
@@ -150,9 +150,11 @@ swarmhq completions fish           # Generate fish completion script
   "keepalived": {
     "enabled": true,
     "interface": "eth0",
+    "routerId": "SWARMHQ",
+    "advertisementInterval": 1,
     "virtualRouterId": 51
   },
-  "ssh": { "port": 22, "hostKeyChecking": "accept-new" }
+  "ssh": { "port": 22, "strictHostKeyChecking": "accept-new" }
 }
 ```
 
@@ -180,7 +182,7 @@ Secrets are **never** stored in `config.json`.
 
 ```bash
 swarmhq ui
-# Opens: http://127.0.0.1:PORT?token=SESSION_TOKEN
+# Opens: http://127.0.0.1:PORT
 
 swarmhq ui --no-open   # Start server without opening browser
 ```
@@ -191,7 +193,7 @@ The dashboard provides:
 - Activity feed with full command history
 - Interactive setup wizard at `/setup`
 
-The UI server binds to `127.0.0.1` only and requires a per-session token for every request.
+The UI server binds to `127.0.0.1` only. The browser UI retrieves a per-session token locally and sends it with every API request.
 
 ---
 
