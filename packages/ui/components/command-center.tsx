@@ -9,6 +9,7 @@ interface CommandCenterProps {
   onSelectCommand: (commandId: string) => void;
   onChangeValue: (optionId: string, value: string | boolean) => void;
   onExecute: () => void;
+  onStop?: () => void;
 }
 
 function findCommand(catalog: CommandCatalog, commandId: string): CommandDefinition | undefined {
@@ -21,6 +22,8 @@ function findPicklist(catalog: CommandCatalog, picklistId?: string): PicklistDef
 
 function isVisibleOption(optionId: string, values: Record<string, string | boolean>): boolean {
   if (optionId === "customText") return values.source === "custom";
+  if (optionId === "filePath") return values.contentSource !== "stdin";
+  if (optionId === "stdinContent") return values.contentSource === "stdin";
   return true;
 }
 
@@ -32,6 +35,7 @@ export function CommandCenter({
   busy,
   onChangeValue,
   onExecute,
+  onStop,
 }: CommandCenterProps) {
   const command = findCommand(catalog, selectedCommandId);
 
@@ -80,6 +84,12 @@ export function CommandCenter({
             </div>
           ))}
 
+        {busy ? (
+          <button className="btn-secondary" type="button" onClick={onStop}>
+            <span className="ms" style={{ fontSize: "1rem" }}>stop</span>
+            Stop
+          </button>
+        ) : null}
         <button className="btn-primary" type="submit" disabled={busy || !command}>
           <span className="ms" style={{ fontSize: "1rem" }}>play_arrow</span>
           {busy ? "Running…" : "Execute"}

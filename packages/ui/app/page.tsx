@@ -119,6 +119,7 @@ export default function Page() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [commandError, setCommandError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [commandAbort, setCommandAbort] = useState<AbortController | null>(null);
   const [rightTab, setRightTab] = useState<"activity" | "output" | "completions">("activity");
   const [outputModal, setOutputModal] = useState(false);
   const [services, setServices] = useState<ServicesPayload["services"]>([]);
@@ -134,10 +135,29 @@ export default function Page() {
     async function loadInitial() {
       try {
         setLoadError(null);
-        const sessionResponse = await fetch("/api/session");
-        if (!sessionResponse.ok) throw new Error(`Session error (${sessionResponse.status})`);
-        const nextSession = (await sessionResponse.json()) as SessionPayload;
-        if (cancelled) return;
+
+        // Retrieve token from query params or sessionStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        let token = urlParams.get("token");
+
+        if (token) {
+          window.sessionStorage.setItem("swarm-session-token", token);
+          // Clear token from URL to avoid leakage in Referer headers
+          const cleanUrl = window.location.pathname + window.location.hash;
+          window.history.replaceState({}, document.title, cleanUrl);
+        } else {
+          token = window.sessionStorage.getItem("swarm-session-token");
+        }
+
+        if (!token) {
+          throw new Error("No session token found. Please launch the UI from the swarmhq CLI.");
+        }
+
+        const nextSession: SessionPayload = {
+          token,
+          configPath: "", // Will be updated by /api/config or meta if needed
+          appName: "swarmhq",
+        };
         setSession(nextSession);
 
         const headers = buildHeaders(nextSession.token);
@@ -315,13 +335,16 @@ export default function Page() {
 
   async function runCommand() {
     if (!session || !selectedCommandId) return;
+    const controller = new AbortController();
     try {
       setBusy(true);
+      setCommandAbort(controller);
       setCommandError(null);
       const res = await fetch("/api/commands/execute", {
         method: "POST",
         headers: buildHeaders(session.token),
         body: JSON.stringify({ commandId: selectedCommandId, values }),
+        signal: controller.signal,
       });
       const payload = (await res.json()) as CommandResponsePayload;
       if (!res.ok || !payload.result) throw new Error(payload.error ?? `Command failed (${res.status})`);
@@ -329,12 +352,17 @@ export default function Page() {
       setRightTab("output");
       await refreshOverview(session.token);
     } catch (error) {
-      setCommandError(error instanceof Error ? error.message : String(error));
+      setCommandError(controller.signal.aborted ? "Command stopped." : error instanceof Error ? error.message : String(error));
       setRightTab("output");
       if (session) await refreshOverview(session.token);
     } finally {
       setBusy(false);
+      setCommandAbort(null);
     }
+  }
+
+  function stopCommand() {
+    commandAbort?.abort();
   }
 
   // ── Group switch ──────────────────────────────────────────────────
@@ -503,6 +531,7 @@ export default function Page() {
               setValues((cur) => ({ ...cur, [optionId]: value }))
             }
             onExecute={() => void runCommand()}
+            onStop={stopCommand}
           />
 
           <div className="content-area">

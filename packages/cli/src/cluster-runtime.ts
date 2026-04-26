@@ -932,6 +932,225 @@ export async function listClusterTasks(options: {
     .join("\n\n");
 }
 
+async function runRemoteText(context: RuntimeContext, command: string): Promise<string> {
+  return (await runLeaderDockerCommand(context, command)).trim();
+}
+
+function decodeJsonArray(output: string): Array<Record<string, unknown>> {
+  return JSON.parse(output || "[]") as Array<Record<string, unknown>>;
+}
+
+export async function listClusterStacks(options: { configPath?: string; asJson?: boolean }): Promise<string> {
+  const context = readContext(options.configPath);
+  const stacks = await runRemoteJsonLines(context, "docker stack ls --format '{{json .}}'");
+  if (options.asJson) return JSON.stringify({ configPath: context.configPath, stacks }, null, 2);
+  if (!stacks.length) return "No stacks were returned by the leader.";
+  return formatTable([
+    ["NAME", "SERVICES", "ORCHESTRATOR"],
+    ...stacks.map((stack) => [stack.Name ?? "unknown", stack.Services ?? "-", stack.Orchestrator ?? "-"]),
+  ]);
+}
+
+export async function listClusterStackTasks(options: { configPath?: string; stackName: string; asJson?: boolean }): Promise<string> {
+  if (!options.stackName.trim()) throw new Error("A stack name is required.");
+  const context = readContext(options.configPath);
+  const tasks = await runRemoteJsonLines(context, `docker stack ps ${shellEscape(options.stackName.trim())} --format '{{json .}}'`);
+  if (options.asJson) return JSON.stringify({ configPath: context.configPath, stackName: options.stackName, tasks }, null, 2);
+  if (!tasks.length) return `No tasks were returned for stack ${options.stackName}.`;
+  return formatTable([
+    ["NAME", "IMAGE", "NODE", "DESIRED", "CURRENT STATE", "ERROR"],
+    ...tasks.map((task) => [
+      task.Name ?? "unknown",
+      task.Image ?? "unknown",
+      task.Node ?? "unknown",
+      task.DesiredState ?? "unknown",
+      task.CurrentState ?? "unknown",
+      task.Error ?? "-",
+    ]),
+  ]);
+}
+
+export async function listClusterStackServices(options: { configPath?: string; stackName: string; asJson?: boolean }): Promise<string> {
+  if (!options.stackName.trim()) throw new Error("A stack name is required.");
+  const context = readContext(options.configPath);
+  const services = await runRemoteJsonLines(context, `docker stack services ${shellEscape(options.stackName.trim())} --format '{{json .}}'`);
+  if (options.asJson) return JSON.stringify({ configPath: context.configPath, stackName: options.stackName, services }, null, 2);
+  if (!services.length) return `No services were returned for stack ${options.stackName}.`;
+  return formatTable([
+    ["NAME", "MODE", "REPLICAS", "IMAGE", "PORTS"],
+    ...services.map((service) => [
+      service.Name ?? "unknown",
+      service.Mode ?? "unknown",
+      service.Replicas ?? "unknown",
+      service.Image ?? "unknown",
+      service.Ports ?? "-",
+    ]),
+  ]);
+}
+
+export async function deployClusterStack(options: { configPath?: string; filePath: string; stackName: string; confirm?: boolean }): Promise<string> {
+  if (!options.confirm) throw new Error("Stack deploy requires explicit confirmation.");
+  if (!options.filePath.trim()) throw new Error("--file is required for stack deploy.");
+  if (!options.stackName.trim()) throw new Error("--name is required for stack deploy.");
+  const context = readContext(options.configPath);
+  return await runRemoteText(context, `docker stack deploy --compose-file ${shellEscape(options.filePath.trim())} ${shellEscape(options.stackName.trim())}`) || `Stack ${options.stackName.trim()} deploy requested.`;
+}
+
+export async function removeClusterStack(options: { configPath?: string; stackName: string; confirm?: boolean }): Promise<string> {
+  if (!options.confirm) throw new Error("Stack removal requires explicit confirmation.");
+  if (!options.stackName.trim()) throw new Error("A stack name is required.");
+  const context = readContext(options.configPath);
+  return await runRemoteText(context, `docker stack rm ${shellEscape(options.stackName.trim())}`) || `Stack ${options.stackName.trim()} removal requested.`;
+}
+
+export async function listClusterSecrets(options: { configPath?: string; asJson?: boolean }): Promise<string> {
+  const context = readContext(options.configPath);
+  const secrets = await runRemoteJsonLines(context, "docker secret ls --format '{{json .}}'");
+  if (options.asJson) return JSON.stringify({ configPath: context.configPath, secrets }, null, 2);
+  if (!secrets.length) return "No secrets were returned by the leader.";
+  return formatTable([["ID", "NAME", "CREATED", "UPDATED"], ...secrets.map((s) => [s.ID ?? "-", s.Name ?? "unknown", s.CreatedAt ?? "-", s.UpdatedAt ?? "-"])]);
+}
+
+export async function inspectClusterSecret(options: { configPath?: string; name: string; asJson?: boolean }): Promise<string> {
+  if (!options.name.trim()) throw new Error("A secret name is required.");
+  const context = readContext(options.configPath);
+  const secret = decodeJsonArray(await runRemoteText(context, `docker secret inspect ${shellEscape(options.name.trim())}`))[0];
+  if (!secret) throw new Error(`Secret not found: ${options.name}`);
+  if (options.asJson) return JSON.stringify({ configPath: context.configPath, secret }, null, 2);
+  const spec = (secret.Spec ?? {}) as Record<string, unknown>;
+  return [`ID: ${String(secret.ID ?? "-")}`, `Name: ${String(spec.Name ?? options.name)}`, `Created: ${String(secret.CreatedAt ?? "-")}`, `Updated: ${String(secret.UpdatedAt ?? "-")}`].join("\n");
+}
+
+export async function createClusterSecret(options: { configPath?: string; name: string; filePath?: string; stdin?: string; confirm?: boolean }): Promise<string> {
+  if (!options.confirm) throw new Error("Secret creation requires explicit confirmation.");
+  if (!options.name.trim()) throw new Error("--name is required for secret create.");
+  const context = readContext(options.configPath);
+  if (options.stdin !== undefined) {
+    const encoded = Buffer.from(options.stdin, "utf8").toString("base64");
+    return await runRemoteText(context, `printf %s ${shellEscape(encoded)} | base64 -d | docker secret create ${shellEscape(options.name.trim())} -`) || `Secret ${options.name.trim()} created.`;
+  }
+  if (options.filePath?.trim()) return await runRemoteText(context, `docker secret create ${shellEscape(options.name.trim())} ${shellEscape(options.filePath.trim())}`) || `Secret ${options.name.trim()} created.`;
+  throw new Error("Secret creation requires --file or --stdin.");
+}
+
+export async function removeClusterSecret(options: { configPath?: string; name: string; confirm?: boolean }): Promise<string> {
+  if (!options.confirm) throw new Error("Secret removal requires explicit confirmation.");
+  if (!options.name.trim()) throw new Error("A secret name is required.");
+  const context = readContext(options.configPath);
+  return await runRemoteText(context, `docker secret rm ${shellEscape(options.name.trim())}`) || `Secret ${options.name.trim()} removed.`;
+}
+
+export async function listClusterConfigs(options: { configPath?: string; asJson?: boolean }): Promise<string> {
+  const context = readContext(options.configPath);
+  const configs = await runRemoteJsonLines(context, "docker config ls --format '{{json .}}'");
+  if (options.asJson) return JSON.stringify({ configPath: context.configPath, configs }, null, 2);
+  if (!configs.length) return "No configs were returned by the leader.";
+  return formatTable([["ID", "NAME", "CREATED", "UPDATED"], ...configs.map((c) => [c.ID ?? "-", c.Name ?? "unknown", c.CreatedAt ?? "-", c.UpdatedAt ?? "-"])]);
+}
+
+export async function inspectClusterConfig(options: { configPath?: string; name: string; asJson?: boolean }): Promise<string> {
+  if (!options.name.trim()) throw new Error("A config name is required.");
+  const context = readContext(options.configPath);
+  const config = decodeJsonArray(await runRemoteText(context, `docker config inspect ${shellEscape(options.name.trim())}`))[0];
+  if (!config) throw new Error(`Config not found: ${options.name}`);
+  if (options.asJson) return JSON.stringify({ configPath: context.configPath, config }, null, 2);
+  const spec = (config.Spec ?? {}) as Record<string, unknown>;
+  return [`ID: ${String(config.ID ?? "-")}`, `Name: ${String(spec.Name ?? options.name)}`, `Created: ${String(config.CreatedAt ?? "-")}`, `Updated: ${String(config.UpdatedAt ?? "-")}`].join("\n");
+}
+
+export async function createClusterConfig(options: { configPath?: string; name: string; filePath?: string; stdin?: string; confirm?: boolean }): Promise<string> {
+  if (!options.confirm) throw new Error("Config creation requires explicit confirmation.");
+  if (!options.name.trim()) throw new Error("--name is required for configs create.");
+  const context = readContext(options.configPath);
+  if (options.stdin !== undefined) {
+    const encoded = Buffer.from(options.stdin, "utf8").toString("base64");
+    return await runRemoteText(context, `printf %s ${shellEscape(encoded)} | base64 -d | docker config create ${shellEscape(options.name.trim())} -`) || `Config ${options.name.trim()} created.`;
+  }
+  if (options.filePath?.trim()) return await runRemoteText(context, `docker config create ${shellEscape(options.name.trim())} ${shellEscape(options.filePath.trim())}`) || `Config ${options.name.trim()} created.`;
+  throw new Error("Config creation requires --file or --stdin.");
+}
+
+export async function removeClusterConfig(options: { configPath?: string; name: string; confirm?: boolean }): Promise<string> {
+  if (!options.confirm) throw new Error("Config removal requires explicit confirmation.");
+  if (!options.name.trim()) throw new Error("A config name is required.");
+  const context = readContext(options.configPath);
+  return await runRemoteText(context, `docker config rm ${shellEscape(options.name.trim())}`) || `Config ${options.name.trim()} removed.`;
+}
+
+export async function listClusterNetworks(options: { configPath?: string; asJson?: boolean }): Promise<string> {
+  const context = readContext(options.configPath);
+  const networks = await runRemoteJsonLines(context, "docker network ls --format '{{json .}}'");
+  if (options.asJson) return JSON.stringify({ configPath: context.configPath, networks }, null, 2);
+  if (!networks.length) return "No networks were returned by the leader.";
+  return formatTable([["ID", "NAME", "DRIVER", "SCOPE"], ...networks.map((n) => [n.ID ?? "-", n.Name ?? "unknown", n.Driver ?? "-", n.Scope ?? "-"])]);
+}
+
+export async function inspectClusterNetwork(options: { configPath?: string; name: string; asJson?: boolean }): Promise<string> {
+  if (!options.name.trim()) throw new Error("A network name is required.");
+  const context = readContext(options.configPath);
+  const network = decodeJsonArray(await runRemoteText(context, `docker network inspect ${shellEscape(options.name.trim())}`))[0];
+  if (!network) throw new Error(`Network not found: ${options.name}`);
+  if (options.asJson) return JSON.stringify({ configPath: context.configPath, network }, null, 2);
+  return [`ID: ${String(network.Id ?? "-")}`, `Name: ${String(network.Name ?? options.name)}`, `Driver: ${String(network.Driver ?? "-")}`, `Scope: ${String(network.Scope ?? "-")}`].join("\n");
+}
+
+export async function createClusterNetwork(options: { configPath?: string; name: string; driver?: string; attachable?: boolean; confirm?: boolean }): Promise<string> {
+  if (!options.confirm) throw new Error("Network creation requires explicit confirmation.");
+  if (!options.name.trim()) throw new Error("--name is required for network create.");
+  const context = readContext(options.configPath);
+  const args = [`docker network create --driver ${shellEscape(options.driver?.trim() || "overlay")}`];
+  if (options.attachable !== false) args.push("--attachable");
+  args.push(shellEscape(options.name.trim()));
+  return await runRemoteText(context, args.join(" ")) || `Network ${options.name.trim()} created.`;
+}
+
+export async function removeClusterNetwork(options: { configPath?: string; name: string; confirm?: boolean }): Promise<string> {
+  if (!options.confirm) throw new Error("Network removal requires explicit confirmation.");
+  if (!options.name.trim()) throw new Error("A network name is required.");
+  const context = readContext(options.configPath);
+  return await runRemoteText(context, `docker network rm ${shellEscape(options.name.trim())}`) || `Network ${options.name.trim()} removed.`;
+}
+
+export async function updateClusterNodeLabel(options: { configPath?: string; action: "add" | "rm"; target: string; key: string; value?: string; confirm?: boolean }): Promise<string> {
+  if (!options.confirm) throw new Error("Node label updates require explicit confirmation.");
+  if (!options.target.trim()) throw new Error("--target is required for node label updates.");
+  if (!options.key.trim()) throw new Error("--key is required for node label updates.");
+  const context = readContext(options.configPath);
+  const label = options.action === "add" && options.value?.trim() ? `${options.key.trim()}=${options.value.trim()}` : options.key.trim();
+  const flag = options.action === "add" ? "--label-add" : "--label-rm";
+  return await runRemoteText(context, `docker node update ${flag} ${shellEscape(label)} ${shellEscape(options.target.trim())}`) || `Node ${options.target.trim()} label ${options.action} completed.`;
+}
+
+export async function readClusterServiceLogs(options: { configPath?: string; serviceName: string; since?: string; tail?: string; follow?: boolean }): Promise<string> {
+  if (!options.serviceName.trim()) throw new Error("A service name is required.");
+  const context = readContext(options.configPath);
+  const args = ["docker service logs"];
+  if (options.follow) args.push("--follow");
+  if (options.since?.trim()) args.push("--since", shellEscape(options.since.trim()));
+  if (options.tail?.trim()) args.push("--tail", shellEscape(options.tail.trim()));
+  args.push(shellEscape(options.serviceName.trim()));
+  return await runRemoteText(context, args.join(" ")) || `No logs were returned for ${options.serviceName.trim()}.`;
+}
+
+export async function buildClusterServiceLogsInvocation(options: {
+  configPath?: string;
+  serviceName: string;
+  since?: string;
+  tail?: string;
+  follow?: boolean;
+}): Promise<{ command: string; args: string[] }> {
+  if (!options.serviceName.trim()) throw new Error("A service name is required.");
+  const context = readContext(options.configPath);
+  const leader = await resolveLeader(context);
+  const target = leader.leaderNode ?? leader.probeNode;
+  const args = ["docker service logs"];
+  if (options.follow) args.push("--follow");
+  if (options.since?.trim()) args.push("--since", shellEscape(options.since.trim()));
+  if (options.tail?.trim()) args.push("--tail", shellEscape(options.tail.trim()));
+  args.push(shellEscape(options.serviceName.trim()));
+  return { command: "ssh", args: buildSshArgs(context, target, args.join(" ")) };
+}
+
 async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }

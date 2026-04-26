@@ -3,14 +3,14 @@
 This document outlines the planned development trajectory for `swarmhq`. Items are grouped by phase.
 Phases are indicative of priority, not strict release milestones.
 
-## Current State (v0.1.x)
+## Current State (v0.3.x)
 
 The initial release ships a functional Docker Swarm management tool with:
 
-- **26 CLI commands** across 5 categories: observability, configuration, operations, maintenance, security
+- **45+ dashboard command definitions plus CLI subcommands** across 5 categories: observability, configuration, operations, maintenance, security
 - **Localhost dashboard** — Next.js UI with command center, node roster, activity feed, setup wizard
 - **SSH-based cluster operations** — health checks, leader election, rolling reboots, OS/Docker updates
-- **Docker API integration** — node/service/task listing, service inspection
+- **Docker API integration** — node/service/task listing, service inspection, stacks, secrets, configs, networks, labels, logs
 - **Keepalived VIP management** — VIP holder detection and failover triggering
 - **Security redaction** — config and env value masking for safe output sharing
 - **Real-time streaming** — SSE-based live output in the dashboard
@@ -24,7 +24,7 @@ The initial release ships a functional Docker Swarm management tool with:
 - [x] **Shell completions** — bash/zsh/fish autocomplete for commands and flags
 - [x] **`swarmhq version`** — print CLI version from package.json
 - [x] **`swarmhq help <command>`** — per-command help with flag descriptions
-- [x] **Test suite expansion** — unit tests for cluster-runtime, command-bridge, docker-runtime
+- [x] **Test suite expansion** — unit tests for command-bridge, docker-runtime, config validation, catalog, redaction, errors, and UI asset resolution
 - [x] **Error codes** — structured exit codes for scripting (0 success, 1 general error, 2 config error, 3 connectivity error)
 - [x] **Config validation improvements** — better error messages when config is malformed or missing required fields
 - [x] **`--dry-run` flag** — show what commands would be executed without running them (maintenance ops)
@@ -35,13 +35,13 @@ The initial release ships a functional Docker Swarm management tool with:
 
 > Goal: Cover all core Docker Swarm primitives via CLI + dashboard.
 
-- [ ] **Stacks** — `swarmhq stack deploy`, `stack ls`, `stack ps`, `stack rm`, `stack services`
-- [ ] **Secrets** — `swarmhq secret create`, `secret ls`, `secret rm`, `secret inspect`
-- [ ] **Configs** — `swarmhq config create`, `config ls`, `config rm`, `config inspect`
-- [ ] **Networks** — `swarmhq network ls`, `network inspect`, `network create`, `network rm`
-- [ ] **Node label management** — `swarmhq node label add/rm` (currently nodes can only be listed)
-- [ ] **Logs streaming** — `swarmhq logs <service>` with `--follow`, `--since`, `--tail`; streamed in dashboard
-- [ ] **Dashboard command catalog additions** — expose stacks, secrets, configs, networks in UI sidebar
+- [x] **Stacks** — `swarmhq stack deploy`, `stack ls`, `stack ps`, `stack rm`, `stack services`
+- [x] **Secrets** — `swarmhq secret create`, `secret ls`, `secret rm`, `secret inspect`
+- [x] **Configs** — `swarmhq configs create`, `configs ls`, `configs rm`, `configs inspect`
+- [x] **Networks** — `swarmhq network ls`, `network inspect`, `network create`, `network rm`
+- [x] **Node label management** — `swarmhq nodes label add/rm`
+- [x] **Logs streaming** — `swarmhq logs <service>` with `--follow`, `--since`, `--tail`; streamed in dashboard with stop control
+- [x] **Dashboard command catalog additions** — expose stacks, secrets, configs, networks, node labels, and logs in UI sidebar
 
 ---
 
@@ -56,7 +56,7 @@ The initial release ships a functional Docker Swarm management tool with:
 - [ ] **SSH key rotation helper** — distribute updated authorized_keys to all nodes
 - [ ] **Dashboard: dark/light theme polish** — respect OS preference on first load
 - [ ] **Dashboard: node detail drawer** — click a node to see its services, resource usage, labels
-- [ ] **Dashboard: log viewer** — in-browser streaming log tail for a selected service
+- [ ] **Dashboard: log viewer** — dedicated log-viewing workspace beyond the Phase 2 command output stream
 
 ---
 
@@ -76,7 +76,7 @@ The initial release ships a functional Docker Swarm management tool with:
 
 ## Maintenance Backlog
 
-- Upgrade to Next.js 15 App Router features (currently using static export)
+- Track Next.js App Router/static export changes as Next.js evolves
 - Migrate cluster-runtime.ts (1,700 lines) into focused sub-modules
 - Add integration test suite using a Docker-in-Docker test cluster
 - API versioning for `/api/*` routes to allow dashboard/CLI version skew

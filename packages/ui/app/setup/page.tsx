@@ -50,9 +50,28 @@ export default function SetupPage() {
 
     async function load() {
       try {
-        const sessionResponse = await fetch("/api/session");
-        if (!sessionResponse.ok) throw new Error(`Failed to create session (${sessionResponse.status})`);
-        const nextSession = (await sessionResponse.json()) as SessionPayload;
+        // Retrieve token from query params or sessionStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        let token = urlParams.get("token");
+
+        if (token) {
+          window.sessionStorage.setItem("swarm-session-token", token);
+          // Clear token from URL to avoid leakage in Referer headers
+          const cleanUrl = window.location.pathname + window.location.hash;
+          window.history.replaceState({}, document.title, cleanUrl);
+        } else {
+          token = window.sessionStorage.getItem("swarm-session-token");
+        }
+
+        if (!token) {
+          throw new Error("No session token found. Please launch the UI from the swarmhq CLI.");
+        }
+
+        const nextSession: SessionPayload = {
+          token,
+          appName: "swarmhq",
+        };
+
         const defaultsResponse = await fetch("/api/setup/defaults", {
           headers: buildHeaders(nextSession.token),
         });

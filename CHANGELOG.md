@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-25
+
+### Added
+- `swarmhq stack` command — manage Docker Swarm stacks: `ls`, `ps`, `services`, `deploy`, and `rm`; works with `--context` (local Docker) or SSH-routed cluster mode
+- `swarmhq secret` command — manage Docker Swarm secrets: `ls`, `inspect`, `create` (from file or stdin), and `rm`
+- `swarmhq configs` command — manage Docker Swarm configs: `ls`, `inspect`, `create` (from file or stdin), and `rm`; `configs` is the plural form to avoid collision with `swarmhq config` (swarmhq's own configuration)
+- `swarmhq network` command — manage Docker overlay networks: `ls`, `inspect`, `create`, and `rm`
+- `swarmhq logs <service>` command — stream or read service logs with `--follow`, `--since`, and `--tail` options
+- `swarmhq nodes label add/rm` subcommands — add or remove labels on swarm nodes via `--target`, `--key`, and `--value`
+- Dashboard command center extended with full parity for all new commands (stacks, secrets, Docker configs, networks, node labels, service logs)
+
 ## [0.3.0] - 2026-04-20
 
 ### Added

@@ -32,10 +32,9 @@
   "keepalived": {
     "enabled": true,
     "interface": "eth0",
-    "routerId": "SWARMCLI",
+    "routerId": "SWARMHQ",
     "virtualRouterId": 51,
-    "advertisementInterval": 1,
-    "authPassEnv": "SWARM_VRRP_PASSWORD"
+    "advertisementInterval": 1
   },
   "ssh": {
     "port": 22,

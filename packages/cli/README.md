@@ -19,9 +19,9 @@ swarmhq config wizard
 | Category | Capabilities |
 |---|---|
 | **Observability** | Health report with SSH reachability, leader detection, VIP sync |
-| **Operations** | Nodes, services, service tasks, task placement (`ps`), leader status |
-| **Maintenance** | Leader failover, rolling reboots, OS/Docker updates, service image updates |
-| **Security** | Config/env redaction preview, localhost-only UI with session tokens |
+| **Operations** | Nodes, services, stacks, networks, logs, task placement (`ps`), leader status |
+| **Maintenance** | Leader failover, rolling reboots, OS/Docker updates, stack/network/node-label changes |
+| **Security** | Config/env redaction preview, Docker secrets/configs, localhost-only UI with session tokens |
 | **Configuration** | Interactive setup wizard (CLI + browser GUI), config init, show, path |
 | **Dashboard** | Embedded Next.js UI — command center, node roster, live activity feed |
 
@@ -64,7 +64,7 @@ swarmhq health --detailed
 swarmhq ui
 ```
 
-The dashboard opens in your browser at `http://127.0.0.1:<port>?token=<session-token>`.
+The dashboard opens in your browser at `http://127.0.0.1:<port>` and retrieves its local session token automatically.
 
 ---
 
@@ -83,21 +83,38 @@ swarmhq health --json              # Machine-readable output
 ```bash
 swarmhq nodes                      # List swarm nodes
 swarmhq services                   # List services
-swarmhq service --name <svc>       # Inspect a service
+swarmhq service inspect --name <svc> # Inspect a service
 swarmhq service tasks --name <svc> # Show task placement
 swarmhq leader                     # Leader status
 swarmhq ps                         # Task placements per node
+swarmhq stack ls                   # List stacks
+swarmhq stack ps --name <stack>    # List stack tasks
+swarmhq stack services --name <stack> # List stack services
+swarmhq network ls                 # List Docker networks
+swarmhq network inspect --name <net> # Inspect a network
+swarmhq logs <svc> --tail 100      # Read service logs
+swarmhq logs <svc> --follow        # Stream service logs
 ```
 
 ### Maintenance
 
 ```bash
-swarmhq leader switch --target <node>  # Switch swarm leader
-swarmhq reboot node --target <node>    # Safe drain → reboot → restore
-swarmhq update check                   # Scan for OS/Docker updates
-swarmhq update node --target <node>    # Apply updates to one node
-swarmhq update all                     # Update all nodes
-swarmhq update service --name <svc>    # Update service image
+swarmhq leader switch --target <node>           # Switch swarm leader
+swarmhq leader switch --target <node> --dry-run # Preview plan without executing
+swarmhq reboot node --target <node>             # Safe drain → reboot → restore
+swarmhq reboot node --target <node> --dry-run   # Preview reboot plan
+swarmhq update check                            # Scan for OS/Docker updates
+swarmhq update node --target <node>             # Apply updates to one node
+swarmhq update node --target <node> --dry-run   # Preview update plan
+swarmhq update all                              # Update all nodes
+swarmhq update all --dry-run                    # Preview full update plan
+swarmhq update service --name <svc>             # Update service image
+swarmhq stack deploy --file <path> --name <stack> --yes # Deploy a stack
+swarmhq stack rm --name <stack> --yes           # Remove a stack
+swarmhq network create --name <net> --yes       # Create an overlay network
+swarmhq network rm --name <net> --yes           # Remove a network
+swarmhq nodes label add --target <node> --key <key> --value <value> --yes
+swarmhq nodes label rm --target <node> --key <key> --yes
 ```
 
 ### Security
@@ -105,7 +122,19 @@ swarmhq update service --name <svc>    # Update service image
 ```bash
 swarmhq redact --source config     # Preview config redaction
 swarmhq redact --source env        # Preview env redaction
+swarmhq secret create --name <name> --file <path> --yes
+swarmhq secret create --name <name> --stdin --yes
+swarmhq secret ls                  # List Docker secrets
+swarmhq secret inspect --name <name>
+swarmhq secret rm --name <name> --yes
+swarmhq configs create --name <name> --file <path> --yes
+swarmhq configs create --name <name> --stdin --yes
+swarmhq configs ls                 # List Docker configs
+swarmhq configs inspect --name <name>
+swarmhq configs rm --name <name> --yes
 ```
+
+`swarmhq config` is reserved for swarmhq's own configuration. Docker Swarm configs use the plural `swarmhq configs` command.
 
 ### Configuration
 
@@ -114,6 +143,17 @@ swarmhq config show                # Display current config
 swarmhq config path                # Resolved config file path
 swarmhq config init                # Create example config
 swarmhq config wizard              # Interactive setup
+```
+
+### General
+
+```bash
+swarmhq version                    # Print current version
+swarmhq upgrade                    # Self-update to the latest version via npm
+swarmhq help <command>             # Show flags, subcommands, and examples
+swarmhq completions bash           # Generate bash completion script
+swarmhq completions zsh            # Generate zsh completion script
+swarmhq completions fish           # Generate fish completion script
 ```
 
 ---
@@ -135,9 +175,11 @@ swarmhq config wizard              # Interactive setup
   "keepalived": {
     "enabled": true,
     "interface": "eth0",
+    "routerId": "SWARMHQ",
+    "advertisementInterval": 1,
     "virtualRouterId": 51
   },
-  "ssh": { "port": 22, "hostKeyChecking": "accept-new" }
+  "ssh": { "port": 22, "strictHostKeyChecking": "accept-new" }
 }
 ```
 
@@ -165,7 +207,7 @@ Secrets are **never** stored in `config.json`.
 
 ```bash
 swarmhq ui
-# Opens: http://127.0.0.1:PORT?token=SESSION_TOKEN
+# Opens: http://127.0.0.1:PORT
 
 swarmhq ui --no-open   # Start server without opening browser
 ```
@@ -175,8 +217,9 @@ The dashboard provides:
 - Node roster with availability and manager status
 - Activity feed with full command history
 - Interactive setup wizard at `/setup`
+- Command parity for stacks, secrets, Docker configs, networks, node labels, and service logs
 
-The UI server binds to `127.0.0.1` only and requires a per-session token for every request.
+The UI server binds to `127.0.0.1` only. The browser UI retrieves a per-session token locally and sends it with every API request.
 
 ---
 
