@@ -255,7 +255,7 @@ export function saveConfig(config: SwarmConfig, explicitPath?: string): string {
   try {
     fs.chmodSync(configPath, 0o600);
   } catch {
-    // Best effort
+    // chmod can fail on filesystems that don't support POSIX permissions (e.g. FAT, some network mounts)
   }
   return configPath;
 }
@@ -380,7 +380,7 @@ export function saveConfigBuilderInput(
   try {
     fs.chmodSync(envPath, 0o600);
   } catch {
-    // Best effort - might fail on some filesystems
+    // chmod can fail on filesystems that don't support POSIX permissions (e.g. FAT, some network mounts)
   }
 
   return {
