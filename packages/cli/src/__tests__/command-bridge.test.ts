@@ -223,6 +223,66 @@ describe("buildCliInvocation", () => {
     });
   });
 
+  describe("Phase 2 resource mappings", () => {
+    it("maps stack deploy with confirmation", () => {
+      const result = buildCliInvocation({
+        commandId: "maintenance.stack-deploy",
+        values: { filePath: "compose.yml", stackName: "apps", confirm: true },
+      });
+      expect(result.args).toEqual(["stack", "deploy", "--file", "compose.yml", "--name", "apps", "--yes"]);
+    });
+
+    it("maps logs follow with filters", () => {
+      const result = buildCliInvocation({
+        commandId: "operations.logs",
+        values: { serviceName: "web", follow: true, since: "1h", tail: "50" },
+      });
+      expect(result.args).toEqual(["logs", "--name", "web", "--follow", "--since", "1h", "--tail", "50"]);
+    });
+
+    it("maps node label add", () => {
+      const result = buildCliInvocation({
+        commandId: "maintenance.node-label-add",
+        values: { nodeId: "worker-a", labelKey: "zone", labelValue: "east", confirm: true },
+      });
+      expect(result.args).toEqual([
+        "nodes",
+        "label",
+        "add",
+        "--target",
+        "worker-a",
+        "--key",
+        "zone",
+        "--value",
+        "east",
+        "--yes",
+      ]);
+    });
+
+    it("sends secret textarea content through stdin without leaking it into displayCommand", () => {
+      const result = buildCliInvocation({
+        commandId: "security.secret-create",
+        values: {
+          name: "api_token",
+          contentSource: "stdin",
+          stdinContent: "super-secret-value",
+          confirm: true,
+        },
+      });
+      expect(result.args).toEqual(["secret", "create", "--name", "api_token", "--stdin", "--yes"]);
+      expect(result.stdin).toBe("super-secret-value");
+      expect(result.displayCommand).not.toContain("super-secret-value");
+    });
+
+    it("maps Docker config create to the plural configs command", () => {
+      const result = buildCliInvocation({
+        commandId: "security.config-create",
+        values: { name: "app_conf", contentSource: "file", filePath: "app.conf", confirm: true },
+      });
+      expect(result.args).toEqual(["configs", "create", "--name", "app_conf", "--file", "app.conf", "--yes"]);
+    });
+  });
+
   describe("error handling", () => {
     it("throws for unknown command id", () => {
       expect(() =>

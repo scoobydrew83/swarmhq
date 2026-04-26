@@ -138,6 +138,18 @@ function updateActivity(updatedEntry: ActivityEntry): void {
   });
 }
 
+function sanitizeActivityValues(commandId: string, values: Record<string, string | boolean>): Record<string, string | boolean> {
+  if (commandId !== "security.secret-create" && commandId !== "security.config-create") {
+    return values;
+  }
+
+  const { stdinContent: _stdinContent, ...safeValues } = values;
+  if (values.contentSource === "stdin") {
+    safeValues.stdinContent = "[redacted]";
+  }
+  return safeValues;
+}
+
 function broadcastActivity(payload: {
   type: "snapshot";
   activities: ActivityEntry[];
@@ -215,15 +227,12 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
   const server = http.createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
 
-    if (url.pathname === "/api/session") {
-      sendJson(res, 200, {
-        token,
-        appName: COMMAND_CATALOG.appName,
-      });
-      return;
-    }
-
     if (url.pathname.startsWith("/api/")) {
+      if (url.pathname === "/api/session") {
+        sendJson(res, 404, { error: "Not found" });
+        return;
+      }
+
       if (!isAuthorized(req, token)) {
         sendJson(res, 401, { error: "Unauthorized" });
         return;
@@ -414,6 +423,7 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
             }
 
             const startedAt = new Date().toISOString();
+            const activityValues = sanitizeActivityValues(parsed.commandId, values);
             const baseActivity: ActivityEntry = {
               id: randomUUID(),
               commandId: commandDefinition.id,
@@ -421,11 +431,13 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
               status: "pending",
               summary: `Running ${commandDefinition.label}...`,
               startedAt,
-              values,
+              values: activityValues,
               commandLine: invocation.displayCommand,
             };
             pushActivity(baseActivity);
             let liveOutput = "";
+            const commandAbort = new AbortController();
+            req.on("close", () => commandAbort.abort());
 
             try {
               const result = await runCliRequest(
@@ -434,6 +446,7 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
                   values,
                 },
                 {
+                  signal: commandAbort.signal,
                   onStdout: (chunk) => {
                     liveOutput = `${liveOutput}${chunk}`;
                     updateActivity({
@@ -541,6 +554,6 @@ export async function startUiServer(options: StartUiServerOptions = {}): Promise
   console.log(`Session token issued for localhost API requests.`);
 
   if (options.openBrowser !== false && process.env.SWARM_UI_OPEN !== "false") {
-    openBrowser(url);
+    openBrowser(`${url}?token=${token}`);
   }
 }

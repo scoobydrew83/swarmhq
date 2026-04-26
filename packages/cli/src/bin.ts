@@ -1,15 +1,20 @@
 import { SwarmHQError } from "@swarmhq/core";
 import { runCompletionsCommand } from "./commands/completions.js";
 import { runConfigCommand } from "./commands/config.js";
+import { runConfigsCommand } from "./commands/configs.js";
 import { runHealthCommand } from "./commands/health.js";
 import { runHelpCommand } from "./commands/help.js";
 import { runLeaderCommand } from "./commands/leader.js";
+import { runLogsCommand } from "./commands/logs.js";
+import { runNetworkCommand } from "./commands/network.js";
 import { runNodesCommand } from "./commands/nodes.js";
 import { runPsCommand } from "./commands/ps.js";
 import { runRedactCommand } from "./commands/redact.js";
 import { runRebootCommand } from "./commands/reboot.js";
 import { runServiceCommand } from "./commands/service.js";
 import { runServicesCommand } from "./commands/services.js";
+import { runSecretCommand } from "./commands/secret.js";
+import { runStackCommand } from "./commands/stack.js";
 import { runUiCommand } from "./commands/ui.js";
 import { runUpdateCommand } from "./commands/update.js";
 import { runUpgradeCommand } from "./commands/upgrade.js";
@@ -29,6 +34,11 @@ Commands:
   nodes        Query swarm nodes through configured SSH targets
   services     Query swarm services through configured SSH targets
   service      Inspect one swarm service or its tasks
+  stack        Deploy and inspect Docker Swarm stacks
+  secret       Manage Docker Swarm secrets
+  configs      Manage Docker Swarm configs
+  network      Manage Docker networks
+  logs         Stream or read swarm service logs
   leader       Show current swarm leader status
   reboot       Reboot configured swarm nodes safely
   update       Scan and apply node or image updates
@@ -45,6 +55,9 @@ Examples:
   swarmhq health --json
   swarmhq health --detailed
   swarmhq leader switch --target docker --yes
+  swarmhq stack ls
+  swarmhq secret ls --json
+  swarmhq logs traefik --tail 100
   swarmhq reboot list
   swarmhq update check
   swarmhq update node --target manager-a --dry-run
@@ -88,6 +101,21 @@ async function main(): Promise<void> {
       return;
     case "service":
       await runServiceCommand(args);
+      return;
+    case "stack":
+      await runStackCommand(args);
+      return;
+    case "secret":
+      await runSecretCommand(args);
+      return;
+    case "configs":
+      await runConfigsCommand(args);
+      return;
+    case "network":
+      await runNetworkCommand(args);
+      return;
+    case "logs":
+      await runLogsCommand(args);
       return;
     case "leader":
       await runLeaderCommand(args);

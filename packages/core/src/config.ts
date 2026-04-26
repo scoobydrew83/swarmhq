@@ -242,6 +242,11 @@ export function saveConfig(config: SwarmConfig, explicitPath?: string): string {
   const configPath = resolveConfigPath(explicitPath);
   fs.mkdirSync(path.dirname(configPath), { recursive: true });
   fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
+  try {
+    fs.chmodSync(configPath, 0o600);
+  } catch {
+    // Best effort
+  }
   return configPath;
 }
 
@@ -361,6 +366,11 @@ export function saveConfigBuilderInput(
 
   fs.mkdirSync(path.dirname(envPath), { recursive: true });
   fs.writeFileSync(envPath, stringifyDotEnv(envEntries), "utf8");
+  try {
+    fs.chmodSync(envPath, 0o600);
+  } catch {
+    // Best effort - might fail on some filesystems
+  }
 
   return {
     configPath,

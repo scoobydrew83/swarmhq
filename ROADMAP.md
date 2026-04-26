@@ -7,10 +7,10 @@ Phases are indicative of priority, not strict release milestones.
 
 The initial release ships a functional Docker Swarm management tool with:
 
-- **24 dashboard command definitions plus CLI subcommands** across 5 categories: observability, configuration, operations, maintenance, security
+- **45+ dashboard command definitions plus CLI subcommands** across 5 categories: observability, configuration, operations, maintenance, security
 - **Localhost dashboard** — Next.js UI with command center, node roster, activity feed, setup wizard
 - **SSH-based cluster operations** — health checks, leader election, rolling reboots, OS/Docker updates
-- **Docker API integration** — node/service/task listing, service inspection
+- **Docker API integration** — node/service/task listing, service inspection, stacks, secrets, configs, networks, labels, logs
 - **Keepalived VIP management** — VIP holder detection and failover triggering
 - **Security redaction** — config and env value masking for safe output sharing
 - **Real-time streaming** — SSE-based live output in the dashboard
@@ -35,13 +35,13 @@ The initial release ships a functional Docker Swarm management tool with:
 
 > Goal: Cover all core Docker Swarm primitives via CLI + dashboard.
 
-- [ ] **Stacks** — `swarmhq stack deploy`, `stack ls`, `stack ps`, `stack rm`, `stack services`
-- [ ] **Secrets** — `swarmhq secret create`, `secret ls`, `secret rm`, `secret inspect`
-- [ ] **Configs** — `swarmhq config create`, `config ls`, `config rm`, `config inspect`
-- [ ] **Networks** — `swarmhq network ls`, `network inspect`, `network create`, `network rm`
-- [ ] **Node label management** — `swarmhq node label add/rm` (node list plus promote/demote exists; label writes are still missing)
-- [ ] **Logs streaming** — `swarmhq logs <service>` with `--follow`, `--since`, `--tail`; streamed in dashboard
-- [ ] **Dashboard command catalog additions** — expose stacks, secrets, configs, networks in UI sidebar
+- [x] **Stacks** — `swarmhq stack deploy`, `stack ls`, `stack ps`, `stack rm`, `stack services`
+- [x] **Secrets** — `swarmhq secret create`, `secret ls`, `secret rm`, `secret inspect`
+- [x] **Configs** — `swarmhq configs create`, `configs ls`, `configs rm`, `configs inspect`
+- [x] **Networks** — `swarmhq network ls`, `network inspect`, `network create`, `network rm`
+- [x] **Node label management** — `swarmhq nodes label add/rm`
+- [x] **Logs streaming** — `swarmhq logs <service>` with `--follow`, `--since`, `--tail`; streamed in dashboard with stop control
+- [x] **Dashboard command catalog additions** — expose stacks, secrets, configs, networks, node labels, and logs in UI sidebar
 
 ---
 
@@ -56,7 +56,7 @@ The initial release ships a functional Docker Swarm management tool with:
 - [ ] **SSH key rotation helper** — distribute updated authorized_keys to all nodes
 - [ ] **Dashboard: dark/light theme polish** — respect OS preference on first load
 - [ ] **Dashboard: node detail drawer** — click a node to see its services, resource usage, labels
-- [ ] **Dashboard: log viewer** — in-browser streaming log tail for a selected service
+- [ ] **Dashboard: log viewer** — dedicated log-viewing workspace beyond the Phase 2 command output stream
 
 ---
 

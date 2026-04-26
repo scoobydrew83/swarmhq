@@ -16,6 +16,7 @@ export type CliInvocation = {
 type RunCliRequestOptions = {
   onStdout?: (chunk: string) => void;
   onStderr?: (chunk: string) => void;
+  signal?: AbortSignal;
 };
 
 function readString(
@@ -317,6 +318,134 @@ export function buildCliInvocation(request: CommandExecutionRequest): CliInvocat
       }
       return { args, displayCommand: `swarmhq ${args.join(" ")}` };
     }
+    case "operations.stack-list": {
+      const args = ["stack", "ls"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendJsonFlag(args, values);
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "operations.stack-ps":
+    case "operations.stack-services": {
+      const args = ["stack", request.commandId.endsWith("ps") ? "ps" : "services"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendOptionalFlag(args, "--name", readString(values, "stackName"));
+      appendJsonFlag(args, values);
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "maintenance.stack-deploy": {
+      const args = ["stack", "deploy"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendOptionalFlag(args, "--file", readString(values, "filePath"));
+      appendOptionalFlag(args, "--name", readString(values, "stackName"));
+      if (readBoolean(values, "confirm")) args.push("--yes");
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "maintenance.stack-remove": {
+      const args = ["stack", "rm"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendOptionalFlag(args, "--name", readString(values, "stackName"));
+      if (readBoolean(values, "confirm")) args.push("--yes");
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "operations.network-list": {
+      const args = ["network", "ls"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendJsonFlag(args, values);
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "operations.network-inspect": {
+      const args = ["network", "inspect"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendOptionalFlag(args, "--name", readString(values, "networkName"));
+      appendJsonFlag(args, values);
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "maintenance.network-create": {
+      const args = ["network", "create"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendOptionalFlag(args, "--name", readString(values, "networkName"));
+      appendOptionalFlag(args, "--driver", readString(values, "driver"));
+      if (readBoolean(values, "confirm")) args.push("--yes");
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "maintenance.network-remove": {
+      const args = ["network", "rm"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendOptionalFlag(args, "--name", readString(values, "networkName"));
+      if (readBoolean(values, "confirm")) args.push("--yes");
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "maintenance.node-label-add":
+    case "maintenance.node-label-remove": {
+      const args = ["nodes", "label", request.commandId.endsWith("add") ? "add" : "rm"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendOptionalFlag(args, "--target", readString(values, "nodeId"));
+      appendOptionalFlag(args, "--key", readString(values, "labelKey"));
+      if (request.commandId.endsWith("add")) appendOptionalFlag(args, "--value", readString(values, "labelValue"));
+      if (readBoolean(values, "confirm")) args.push("--yes");
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "operations.logs": {
+      const args = ["logs"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendOptionalFlag(args, "--name", readString(values, "serviceName"));
+      if (readBoolean(values, "follow")) args.push("--follow");
+      appendOptionalFlag(args, "--since", readString(values, "since"));
+      appendOptionalFlag(args, "--tail", readString(values, "tail"));
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "security.secret-list":
+    case "security.config-list": {
+      const args = [request.commandId.includes("secret") ? "secret" : "configs", "ls"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendJsonFlag(args, values);
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "security.secret-inspect":
+    case "security.config-inspect": {
+      const args = [request.commandId.includes("secret") ? "secret" : "configs", "inspect"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendOptionalFlag(args, "--name", readString(values, "name"));
+      appendJsonFlag(args, values);
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "security.secret-remove":
+    case "security.config-remove": {
+      const args = [request.commandId.includes("secret") ? "secret" : "configs", "rm"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendOptionalFlag(args, "--name", readString(values, "name"));
+      if (readBoolean(values, "confirm")) args.push("--yes");
+      return { args, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
+    case "security.secret-create":
+    case "security.config-create": {
+      const args = [request.commandId.includes("secret") ? "secret" : "configs", "create"];
+      appendOptionalFlag(args, "--config", readString(values, "configPath"));
+      appendOptionalFlag(args, "--context", readString(values, "context"));
+      appendOptionalFlag(args, "--name", readString(values, "name"));
+      let stdin: string | undefined;
+      if (readString(values, "contentSource", "file") === "stdin") {
+        args.push("--stdin");
+        stdin = readString(values, "stdinContent");
+      } else {
+        appendOptionalFlag(args, "--file", readString(values, "filePath"));
+      }
+      if (readBoolean(values, "confirm")) args.push("--yes");
+      return { args, stdin, displayCommand: `swarmhq ${args.join(" ")}` };
+    }
     default:
       throw new Error(`No CLI bridge is defined for command ${request.commandId}`);
   }
@@ -340,6 +469,10 @@ export async function runCliRequest(
       env: process.env,
       stdio: "pipe",
     });
+    const abort = () => {
+      child.kill("SIGTERM");
+    };
+    options.signal?.addEventListener("abort", abort, { once: true });
 
     let stdout = "";
     let stderr = "";
@@ -359,7 +492,12 @@ export async function runCliRequest(
     child.on("error", reject);
 
     child.on("close", (code) => {
+      options.signal?.removeEventListener("abort", abort);
       const output = `${stdout}${stderr}`.trim();
+      if (options.signal?.aborted) {
+        reject(new Error(output || "Command stopped."));
+        return;
+      }
       if (code === 0) {
         resolve({
           commandId: request.commandId,

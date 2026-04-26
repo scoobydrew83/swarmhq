@@ -8,9 +8,21 @@ vi.mock("node:child_process", () => ({
 const mockExecFileSync = vi.mocked(execFileSync);
 
 // Import after mocking
-const { listNodes, listServices, inspectService, getLeaderStatus, listTasks, listServiceTasks } = await import(
-  "../docker-runtime.js"
-);
+const {
+  listNodes,
+  listServices,
+  inspectService,
+  getLeaderStatus,
+  listTasks,
+  listServiceTasks,
+  listStacks,
+  deployStack,
+  createSecret,
+  createConfig,
+  listNetworks,
+  updateNodeLabel,
+  readServiceLogs,
+} = await import("../docker-runtime.js");
 
 function makeMockOutput(records: Record<string, string>[]): string {
   return records.map((r) => JSON.stringify(r)).join("\n");
@@ -212,6 +224,68 @@ describe("docker-runtime", () => {
       const result = listTasks({ asJson: true });
       const parsed = JSON.parse(result) as { taskGroups: unknown[] };
       expect(Array.isArray(parsed.taskGroups)).toBe(true);
+    });
+  });
+
+  describe("Phase 2 resources", () => {
+    it("lists stacks with JSON-line formatting", () => {
+      mockExecFileSync.mockReturnValue(makeMockOutput([{ Name: "apps", Services: "3", Orchestrator: "Swarm" }]));
+      const result = listStacks();
+      expect(result).toContain("apps");
+      expect(mockExecFileSync).toHaveBeenCalledWith("docker", ["stack", "ls", "--format", "{{json .}}"], expect.anything());
+    });
+
+    it("deploys stacks only when confirmed", () => {
+      expect(() => deployStack({ filePath: "compose.yml", stackName: "apps" })).toThrow("confirmation");
+      mockExecFileSync.mockReturnValue("Creating service");
+      deployStack({ filePath: "compose.yml", stackName: "apps", confirm: true });
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        "docker",
+        ["stack", "deploy", "--compose-file", "compose.yml", "apps"],
+        expect.anything(),
+      );
+    });
+
+    it("pipes stdin content for secret creation without adding it to argv", () => {
+      mockExecFileSync.mockReturnValue("secret-id");
+      createSecret({ name: "api_token", stdin: "super-secret", confirm: true });
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        "docker",
+        ["secret", "create", "api_token", "-"],
+        expect.objectContaining({ input: "super-secret" }),
+      );
+    });
+
+    it("pipes stdin content for config creation without adding it to argv", () => {
+      mockExecFileSync.mockReturnValue("config-id");
+      createConfig({ name: "app_conf", stdin: "password=secret", confirm: true });
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        "docker",
+        ["config", "create", "app_conf", "-"],
+        expect.objectContaining({ input: "password=secret" }),
+      );
+    });
+
+    it("lists networks and updates node labels", () => {
+      mockExecFileSync.mockReturnValueOnce(makeMockOutput([{ ID: "abc", Name: "app_net", Driver: "overlay", Scope: "swarm" }]));
+      expect(listNetworks()).toContain("app_net");
+      mockExecFileSync.mockReturnValueOnce("");
+      updateNodeLabel({ action: "add", target: "worker-a", key: "zone", value: "east", confirm: true });
+      expect(mockExecFileSync).toHaveBeenLastCalledWith(
+        "docker",
+        ["node", "update", "--label-add", "zone=east", "worker-a"],
+        expect.anything(),
+      );
+    });
+
+    it("builds service log args with follow filters", () => {
+      mockExecFileSync.mockReturnValue("line 1");
+      readServiceLogs({ serviceName: "web", follow: true, since: "1h", tail: "20" });
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        "docker",
+        ["service", "logs", "--follow", "--since", "1h", "--tail", "20", "web"],
+        expect.anything(),
+      );
     });
   });
 });

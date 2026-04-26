@@ -83,7 +83,7 @@ npm run ui:no-open   # skip browser auto-open
 - `server/ui-server.ts` — HTTP server (~485 lines):
   - Binds to `127.0.0.1:0` (random free port, localhost-only)
   - Random UUID session token per launch
-  - API endpoints: `/api/session`, `/api/meta`, `/api/config`, `/api/health`, `/api/activity`, `/api/events` (SSE), `/api/setup/defaults`, `/api/setup/save`, `/api/commands/execute`
+  - API endpoints: `/api/meta`, `/api/config`, `/api/health`, `/api/activity`, `/api/events` (SSE), `/api/setup/defaults`, `/api/setup/save`, `/api/commands/execute`
   - Serves static Next.js export from `ui-dist/` with SPA fallback
 - `commands/` — One file per CLI command: `config` (interactive wizard), `health`, `nodes`, `services`, `service`, `leader`, `ps`, `redact`, `reboot`, `update`, `ui`
 - `scripts/copy-ui.mjs` — Post-build script that copies Next.js static export into CLI `ui-dist/`
