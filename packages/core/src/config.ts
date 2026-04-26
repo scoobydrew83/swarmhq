@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { ConfigError } from "./errors.js";
 import { getDefaultConfigPath, getDefaultEnvPath } from "./paths.js";
@@ -237,9 +238,18 @@ export function loadConfig(explicitPath?: string): { config: SwarmConfig; path: 
   };
 }
 
+function assertWithinHome(resolvedPath: string, label: string): void {
+  const home = os.homedir();
+  const normalised = path.normalize(resolvedPath);
+  if (!normalised.startsWith(home + path.sep) && normalised !== home) {
+    throw new ConfigError(`${label} must be within your home directory (${home}).`);
+  }
+}
+
 export function saveConfig(config: SwarmConfig, explicitPath?: string): string {
   validateConfig(config);
   const configPath = resolveConfigPath(explicitPath);
+  assertWithinHome(configPath, "Config path");
   fs.mkdirSync(path.dirname(configPath), { recursive: true });
   fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
   try {
@@ -364,6 +374,7 @@ export function saveConfigBuilderInput(
     savedSecretKeys.push("SWARM_TAILSCALE_AUTHKEY");
   }
 
+  assertWithinHome(envPath, "Env path");
   fs.mkdirSync(path.dirname(envPath), { recursive: true });
   fs.writeFileSync(envPath, stringifyDotEnv(envEntries), "utf8");
   try {
