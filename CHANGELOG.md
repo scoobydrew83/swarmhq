@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-05-02
+
+### Fixed
+- Health checks, reboot target listing, and update scans incorrectly reported nodes as "Unreachable" when the raw TCP port probe timed out before the SSH connection could be established — increased `checkPort` timeout from 3 seconds to 10 seconds to match the SSH `ConnectTimeout` setting
+
 ## [0.4.0] - 2026-04-25
 
 ### Added
