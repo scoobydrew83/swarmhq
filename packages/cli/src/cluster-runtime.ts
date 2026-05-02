@@ -221,7 +221,7 @@ function checkPort(host: string, port: number, timeoutMs = 3000): Promise<boolea
 }
 
 async function checkNodeConnectivity(context: RuntimeContext, node: SwarmNode): Promise<NodeConnectivity> {
-  const reachable = await checkPort(node.host, context.config.ssh.port, 3000);
+  const reachable = await checkPort(node.host, context.config.ssh.port, 10000);
   if (!reachable) {
     return { node, reachable: false, sshOk: false };
   }
@@ -1335,7 +1335,7 @@ export async function listRebootTargets(options: {
   const lines: string[] = [];
 
   for (const [index, node] of context.config.nodes.entries()) {
-    const reachable = await checkPort(node.host, context.config.ssh.port, 3000);
+    const reachable = await checkPort(node.host, context.config.ssh.port, 10000);
     if (!reachable) {
       lines.push(`${index + 1}. ${node.id.padEnd(15)} ${node.host.padEnd(15)} ❌ Offline`);
       continue;
@@ -1360,7 +1360,7 @@ export async function getRebootStatus(options: {
   const hostname = (await getNodeHostname(context, node)) ?? node.id;
   const lines = [`Reboot Status: ${hostname} (${node.host})`];
 
-  const reachable = await checkPort(node.host, context.config.ssh.port, 3000);
+  const reachable = await checkPort(node.host, context.config.ssh.port, 10000);
   if (!reachable) {
     lines.push("Reachability: offline");
     return lines.join("\n");
@@ -1525,7 +1525,7 @@ async function detectOsType(context: RuntimeContext, node: SwarmNode): Promise<s
 }
 
 async function getNodeVersionSummary(context: RuntimeContext, node: SwarmNode): Promise<NodeUpdateSummary> {
-  const reachable = await checkPort(node.host, context.config.ssh.port, 3000);
+  const reachable = await checkPort(node.host, context.config.ssh.port, 10000);
   const hostname = (await getNodeHostname(context, node)) ?? node.id;
   const sshOk = reachable && (await tryExecSsh(context, node, "printf OK")) === "OK";
 
